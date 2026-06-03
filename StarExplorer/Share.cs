@@ -1,0 +1,31 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace StarExplorer
+{
+    internal class Share
+    {
+    }
+
+    public enum ExplorerLayout
+    {
+        Desktop = 0,
+        Mobile = 1
+    }
+
+    public enum DisplayMode
+    {
+        Devices,
+        Normal_Detail,
+        Normal_BigIcon
+    }
+
+    public enum StartLocation
+    {
+        Devices,
+        Home,
+    }
+}

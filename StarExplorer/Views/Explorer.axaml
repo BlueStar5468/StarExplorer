@@ -1,0 +1,159 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:compilerservices="using:System.Runtime.CompilerServices"
+        xmlns:controls="using:StarExplorer.Controls"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:viewmodels="using:StarExplorer.ViewModels"
+        
+        x:Class="StarExplorer.Views.Explorer"
+        x:DataType="viewmodels:ExplorerData"
+        d:DataContext="{x:Static viewmodels:ExplorerData.DesignInstance}"
+        
+        
+        Width="800"
+        Height="600"
+        MinWidth="400"
+        MinHeight="440"
+
+        WindowDecorations="Full"
+
+        Icon="/Assets/avalonia-logo.ico"
+        Title="StarExplorer">
+
+    <DockPanel Background="LightGray">
+        <Grid DockPanel.Dock="Top" x:Name="TitleBarGird" Height="40">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border x:Name="TitleBorder" Grid.Column="0" Background="{Binding ThemeColor}" Margin="3" CornerRadius="5">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="0" Source="/Assets/avalonia-logo.ico"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" Margin="3,0"/>
+                </Grid>
+            </Border>
+
+            <Border x:Name="TabBorder" Grid.Column="1" Background="{Binding ThemeColor}" Margin="3" CornerRadius="5" >
+                <Grid x:Name="TabGird">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="LightBlue" Width="{Binding TabWidth}" Height="{Binding TabHeight}" Margin="3,0,3,0"  CornerRadius="5">
+                        <DockPanel>
+                            <Image Source="/Assets/avalonia-logo.ico" DockPanel.Dock="Left" Width="16" Height="16" Margin="5"/>
+                            <Panel Background="Red">
+                                <TextBlock Text="此电脑" VerticalAlignment="Center"/>
+                            </Panel>
+                            <Button Content="X" DockPanel.Dock="Right" Background="Transparent"/>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                    <Border Background="LightBlue" Width="32" Height="{Binding TabHeight}" Margin="3,0,3,0" CornerRadius="5" Grid.Column="1" HorizontalAlignment="Left">
+                        <Button x:Name="AddButton" Content="＋" Background="Transparent"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border x:Name="WindowControlBorder" Grid.Column="2" Background="{Binding ThemeColor}" Margin="3" CornerRadius="5">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="m" Width="30" Height="30" Margin="5"/>
+                    <Button Grid.Column="1" Content="M" Width="30" Height="30" Margin="5"/>
+                    <Button Grid.Column="2" Content="C" Width="30" Height="30" Margin="5"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="Gird_0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="Gray">
+                <StackPanel>
+                    <Border x:Name="QuickBorder" Background="{Binding ThemeColor}" Margin="3" CornerRadius="5">
+                        <StackPanel>
+                            <TextBlock Text="快速访问" Margin="5"/>
+                            <TreeView>
+                                <TreeView.ItemTemplate>
+                                    <TreeDataTemplate>
+                                        <Border>
+                                            <Grid>
+                                                <Image Source="/Assets/avalonia-logo.ico" Width="16" Height="16" Margin="5"/>
+                                                <TextBlock Text="Text" VerticalAlignment="Center" Margin="5,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </TreeDataTemplate>
+                                </TreeView.ItemTemplate>
+                                <TreeViewItem Header="Item 1">
+                                    <TreeViewItem Header="Subitem 1"/>
+                                    <TreeViewItem Header="Subitem 2"/>
+                                </TreeViewItem>
+                                <TreeViewItem>
+                                    <TreeViewItem.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="/Assets/avalonia-logo.ico" Width="16" Height="16" Margin="5"/>
+                                            <TextBlock Text="Item 2" VerticalAlignment="Center" Margin="5,0"/>
+                                        </StackPanel>
+                                    </TreeViewItem.Header>
+                                </TreeViewItem>
+                                <TreeViewItem Header="Item 3"/>
+                            </TreeView>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="LocationBorder" Background="{Binding ThemeColor}" Margin="3" CornerRadius="5">
+                        <StackPanel>
+                            <TextBlock Text="位置" Margin="5"/>
+                            <TreeView x:Name="LocationTree">
+                                <TreeView.ItemTemplate>
+                                    <TreeDataTemplate>
+                                        <Border>
+                                            <Grid>
+                                                <Image Source="/Assets/avalonia-logo.ico" Width="16" Height="16" Margin="5"/>
+                                                <TextBlock Text="Text" VerticalAlignment="Center" Margin="5,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </TreeDataTemplate>
+                                </TreeView.ItemTemplate>
+                                <TreeViewItem>
+                                    <TreeViewItem.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="/Assets/avalonia-logo.ico" Width="16" Height="16" Margin="5"/>
+                                            <TextBlock Text="Item 2" VerticalAlignment="Center" Margin="5,0"/>
+                                        </StackPanel>
+                                    </TreeViewItem.Header>
+                                </TreeViewItem>
+                            </TreeView>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Column="1" x:Name="MainDisplayPanel" >
+          
+            </StackPanel>
+
+        </Grid>
+
+
+    </DockPanel>
+
+    
+
+</Window>
