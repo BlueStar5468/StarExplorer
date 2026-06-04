@@ -1,12 +1,13 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform;
+using StarExplorer.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 
-namespace StarExplorer.Controls
+namespace StarExplorer.Logic
 {
     internal class TabManager : ITabManager , INotifyPropertyChanged
     {
@@ -28,7 +29,7 @@ namespace StarExplorer.Controls
             else this.maxIDCount = 10;
         }
 
-        public void NewTab(Panel content,String backgroundColor, out int newid)
+        public void NewTab(Panel content,string backgroundColor, out int newid)
         {
             int id = GetID();
             TabContent newTabContent = new TabContent(
@@ -138,14 +139,18 @@ namespace StarExplorer.Controls
             });
         }
 
+        public void Initialize()
+        {
+            
+        }
     }
 
-    public interface ITabManager : INotifyPropertyChanged
+    public interface ITabManager : INotifyPropertyChanged , IModule
     {
         public ObservableCollection<ITabContent> tabContents { get; set; }
         public int CurrentTabId { get; }
         int TabCount { get; }
-        public void NewTab(Panel content, String backgroundColor,out int newid);
+        public void NewTab(Panel content, string backgroundColor,out int newid);
         public void CloseTab(int id);
         public void SelectTab(int id);
         public void OnTabClicked(int id);
@@ -154,26 +159,26 @@ namespace StarExplorer.Controls
 
     public class TabContent : INotifyPropertyChanged , ITabContent
     {
-        private String label = "未命名标签页";
-        private String backgroundColor = null!;
+        private string label = "未命名标签页";
+        private string backgroundColor = null!;
         private IImage icon = null!;
         private int index = 0;
         private Panel content = null!;//标签页的通用内容容器，具体内容由外部设置和管理
         private bool isSelected = false;
         public bool IsSelected { get => isSelected; set { if (isSelected != value) { isSelected = value; OnPropertyChanged(nameof(IsSelected)); } } }
-        public String Label { get => label; set { if (label != value) { label = value; OnPropertyChanged(nameof(Label)); } } }
+        public string Label { get => label; set { if (label != value) { label = value; OnPropertyChanged(nameof(Label)); } } }
         public IImage Icon { get => icon; set { if (icon != value) { icon = value; OnPropertyChanged(nameof(Icon)); } } }
         public int Index { get => index; set { if (index != value) { index = value; OnPropertyChanged(nameof(Index)); } } }
         public Panel Content { get => content; set { if (content != value) { content = value; OnPropertyChanged(nameof(Content)); } } }
-        public String BackgroundColor { get => backgroundColor; set { if (backgroundColor != value) { backgroundColor = value; OnPropertyChanged(nameof(BackgroundColor)); } } }
+        public string BackgroundColor { get => backgroundColor; set { if (backgroundColor != value) { backgroundColor = value; OnPropertyChanged(nameof(BackgroundColor)); } } }
 
-        public TabContent(String label, IImage icon, Panel content,int index, string backgroundColor)
+        public TabContent(string label, IImage icon, Panel content,int index, string backgroundColor)
         {
-            this.Label = label;
-            this.Icon = icon;
-            this.Index = index;
-            this.Content = content;
-            this.BackgroundColor = backgroundColor;
+            Label = label;
+            Icon = icon;
+            Index = index;
+            Content = content;
+            BackgroundColor = backgroundColor;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -188,11 +193,11 @@ namespace StarExplorer.Controls
 
     public interface ITabContent : INotifyPropertyChanged
     {
-        public String Label { get; set; }
+        public string Label { get; set; }
         public IImage Icon { get; set; }
         public int Index { get; set; }
         public Panel Content { get; set; }
-        public String BackgroundColor { get; set; }
+        public string BackgroundColor { get; set; }
         public bool IsSelected { get; set; }
     }
 }

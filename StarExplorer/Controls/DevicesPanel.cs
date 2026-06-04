@@ -9,38 +9,44 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace StarExplorer.Controls
 {
-    internal class DivicesPanel
+    internal class DevicesPanel
     {
+        //数据
+        DevicePanelData data;
         StackPanel root;
-        public DivicesPanel(ExplorerData dataContext)
+
+        public DevicesPanel(DevicePanelData dataContext)
         {
             root = new StackPanel();
             //添加标签
             Border CatgoryBorder_1 = new Border()
             {
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                Child = new TextBlock()
-                {
-                    Text = "Local",
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                    FontSize = 24,
-                    Foreground = Brush.Parse("rgb(0, 0, 0)")    //黑色字体
-                },
+                
             };
+            TextBlock text = new TextBlock()
+            {
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            }; 
+            text.DataContext = dataContext;
+            text.Bind(TextBlock.TextProperty, new Avalonia.Data.Binding(nameof(dataContext.Localized_LocalLabel)));
+            text.Bind(TextBlock.FontSizeProperty, new Avalonia.Data.Binding(nameof(dataContext.LabelFontSize)));
+            text.Bind(TextBlock.ForegroundProperty, new Avalonia.Data.Binding(nameof(dataContext.LabelColor)) { Converter = new BrushConverter() });
+
+            CatgoryBorder_1.Child = text;
+
             CatgoryBorder_1.DataContext = dataContext;
-            CatgoryBorder_1.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.ThemeColor)));
-            CatgoryBorder_1.Bind(Border.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.DisplayMargin)) { Converter = new ThicknessConverter() });
-            CatgoryBorder_1.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.DeviceItemCornerRadius)) { Converter = new CornerRadiusConverter() });
+            CatgoryBorder_1.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.ThemeColor)) { Converter = new BrushConverter()});
+            CatgoryBorder_1.Bind(Border.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemMargin)) { Converter = new ThicknessConverter() });
+            CatgoryBorder_1.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemCornerRadius)) { Converter = new CornerRadiusConverter() });
             root.Children.Add(CatgoryBorder_1);
 
-            if (dataContext.devices.Count == 0)
+            if (dataContext.Devices.Count == 0)
             {
                 //未识别到设备，显示错误提示
                 Border border = new Border()
@@ -50,18 +56,19 @@ namespace StarExplorer.Controls
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
                 };
                 border.DataContext = dataContext;
-                border.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.mainDisplayBackgroundColor)));
-                border.Bind(Border.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.DisplayMargin)) { Converter = new ThicknessConverter() });
-                border.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.DeviceItemCornerRadius)) { Converter = new CornerRadiusConverter() });
+                border.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.ThemeColor)));
+                border.Bind(Border.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemMargin)) { Converter = new ThicknessConverter() });
+                border.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemCornerRadius)) { Converter = new CornerRadiusConverter() });
 
                 TextBlock textBlock = new TextBlock()
                 {
-                    Text = "未识别到任何设备",
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                    FontSize = 32,
-                    Foreground = Brush.Parse("rgb(0, 0, 0)")    //黑色字体
                 };
+                textBlock.DataContext = dataContext;
+                textBlock.Bind(TextBlock.TextProperty, new Avalonia.Data.Binding(nameof(dataContext.Localized_NoDevicesLabel)));
+                textBlock.Bind(TextBlock.ForegroundProperty, new Avalonia.Data.Binding(nameof(dataContext.TextColor)) { Converter = new BrushConverter() });
+                textBlock.Bind(TextBlock.FontSizeProperty, new Avalonia.Data.Binding(nameof(dataContext.LabelFontSize)));
 
                 border.Child = textBlock;
 
@@ -76,8 +83,8 @@ namespace StarExplorer.Controls
                     {
                         WrapPanel panel = new WrapPanel();
                         panel.DataContext = dataContext;
-                        panel.Bind(WrapPanel.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.DisplayMargin)) {Converter = new ThicknessConverter()});
-                        panel.Bind(WrapPanel.ItemSpacingProperty, new Avalonia.Data.Binding(nameof(dataContext.DeviceSpacing)));
+                        panel.Bind(WrapPanel.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemMargin)) {Converter = new ThicknessConverter()});
+                        panel.Bind(WrapPanel.ItemSpacingProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemSpacing)));
                         return panel;
                     }),
 
@@ -85,26 +92,16 @@ namespace StarExplorer.Controls
                     ItemTemplate = new FuncDataTemplate<LogicDevices>((device, _) =>
                     {
                         IImage icon;
-                        if (dataContext.driveImage_Normal == null) icon = null!;
-                        else icon = dataContext.driveImage_Normal;
-                        DeviceControl deviceControl = new DeviceControl(
-                                device.GetTitle(),
-                                16,
-                                icon,
-                                dataContext.deviceDisplayWidth,
-                                dataContext.deviceDisplayHeight,
-                                dataContext.deviceItemCornerRadius,
-                                dataContext.itemBackgroundColor,    //设备项背景色
-                                dataContext.HoverBackgroundColor,   //设备项Hover背景色
-                                dataContext.SelectedBackgroundColor //设备项选中背景色
-                            );
+                        if (dataContext.DriveImage_Normal == null) icon = null!;
+                        else icon = dataContext.DriveImage_Normal;
+                        DeviceControl deviceControl = new DeviceControl(dataContext,device);
                         //diviceControl的数据绑定会在其本身进行
                         return deviceControl.GetInstance();
                     }, supportsRecycling: true)
                 };
 
                 // 设置数据源（ItemsSorce 可以接受 List<T> 或 ObservableCollection<T>
-                itemsControl.ItemsSource = dataContext.devices;
+                itemsControl.ItemsSource = dataContext.Devices;
 
                 // 把 ItemsControl 放入主显示区
                 root.Children.Add(itemsControl);

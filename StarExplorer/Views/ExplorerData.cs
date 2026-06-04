@@ -1,6 +1,5 @@
 ﻿using Avalonia.Media;
 using Avalonia.Platform;
-using StarExplorer.Controls;
 using StarExplorer.Logic;
 using StarExplorer.Shared;
 using System;
@@ -14,7 +13,7 @@ namespace StarExplorer.Views
     public class ExplorerData : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
-        public event Action? AppExitRequested;
+        
 
         //数据
         //依赖
@@ -38,8 +37,6 @@ namespace StarExplorer.Views
         public IImage? driveImage_Normal;
         public ObservableCollection<LogicDevices> devices { get; set; } = new ObservableCollection<LogicDevices>();
 
-        //主要显示区大小
-        internal Avalonia.Size mainDisplaySize;
         //当前显示的内容类型
         internal DisplayMode displayMode;
 
@@ -67,7 +64,7 @@ namespace StarExplorer.Views
             deviceDisplayWidth = settings.DeviceDisplayWidth;
             deviceDisplayHeight = settings.DeviceDisplayHeight;
             deviceSpacing = settings.DeviceSpacing;
-            displayMargin = settings.PanelMargin;
+            displayMargin = settings.DevicePanelMargin;
             deviceItemCornerRadius = settings.DeviceCornerRadius;
             ThemeColor = settings.ThemeColor;
             mainDisplayBackgroundColor = settings.WindowDisplayBackgroundColor;
@@ -90,8 +87,8 @@ namespace StarExplorer.Views
                     case nameof(settings.DeviceSpacing):
                         DeviceSpacing = settings.DeviceSpacing;
                         break;
-                    case nameof(settings.PanelMargin):
-                        DisplayMargin = settings.PanelMargin;
+                    case nameof(settings.DevicePanelMargin):
+                        DisplayMargin = settings.DevicePanelMargin;
                         break;
                     case nameof(settings.DeviceCornerRadius):
                         DeviceItemCornerRadius = settings.DeviceCornerRadius;
@@ -154,14 +151,6 @@ namespace StarExplorer.Views
         public int DisplayMargin { get => displayMargin; set { if (displayMargin != value) { displayMargin = value; OnPropertyChanged(nameof(DisplayMargin)); } } }
         public int DeviceItemCornerRadius { get => deviceItemCornerRadius; set { if (deviceItemCornerRadius != value) { deviceItemCornerRadius = value; OnPropertyChanged(nameof(DeviceItemCornerRadius)); } } }
         public int DeviceSpacing { get => deviceSpacing; set { if (deviceSpacing != value) { deviceSpacing = value; OnPropertyChanged(nameof(DeviceSpacing)); } } }
-        //关闭所有标签页后退出应用程序
-        public void CheckExit(int id)
-        {
-            if (tabManager.TabCount == 0)
-            {
-                AppExitRequested?.Invoke();
-            }
-        }
 
         //从文件路径加载 IImage（Bitmap）
         internal async Task<IImage> LoadBitmapFromPath(string path)

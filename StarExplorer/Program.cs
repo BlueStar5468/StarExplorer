@@ -1,5 +1,5 @@
-﻿using System;
-using Avalonia;
+﻿using Avalonia;
+using System;
 
 namespace StarExplorer
 {
@@ -22,9 +22,6 @@ namespace StarExplorer
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-#if debug
-                .withdevelopertools()
-#endif
                 .WithInterFont()
                 .LogToTrace();
     }

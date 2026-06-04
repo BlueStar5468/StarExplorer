@@ -27,6 +27,9 @@ namespace StarExplorer
             logicRoot.Initialize();
             
             Window explorer = logicRoot.GetMainWindow();
+#if DEBUG
+            explorer.AttachDevTools();
+#endif
 
             //跨平台检查 和 生命周期设置
             if (Design.IsDesignMode == false)

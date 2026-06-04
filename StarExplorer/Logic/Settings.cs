@@ -34,6 +34,9 @@ namespace StarExplorer.Logic
 
         #region 全局设置
         StartLocation startLocation = StartLocation.Devices;
+        private int textFontSize = 14;
+        private int labelFontSize = 20;
+
 
         #endregion
 
@@ -45,6 +48,9 @@ namespace StarExplorer.Logic
         string selectedBackgroundColor = Colors.Blue.ToString();//选中背景色 可选择控件在选中时的背景色
         string deviceBackgroundColor = Colors.LightGray.ToString();//设备项背景色 设备显示模式下设备项的背景色
         string tabItemBackgroundColor = Colors.LightBlue.ToString();//标签页标的背景色 
+
+        string devicePanelLabelTextColor = Colors.Black.ToString(); //设备显示模式下显示区标签的文字颜色
+        string devicePanelTextColor = Colors.Black.ToString(); //设备显示模式下显示区的文字颜色
 
         #endregion 图片资源
         IImage? driveImage_System; 
@@ -67,7 +73,7 @@ namespace StarExplorer.Logic
         #endregion
 
         #region 设备显示模式的显示区设置
-        public int PanelMargin { get => panelMargin; set { panelMargin = value; OnPropertyChanged(nameof(PanelMargin)); } }
+        public int DevicePanelMargin { get => panelMargin; set { panelMargin = value; OnPropertyChanged(nameof(DevicePanelMargin)); } }
         public int DeviceDisplayWidth { get => deviceDisplayWidth; set { deviceDisplayWidth = value; OnPropertyChanged(nameof(DeviceDisplayWidth)); } }
         public int DeviceDisplayHeight { get => deviceDisplayHeight; set { deviceDisplayHeight = value; OnPropertyChanged(nameof(DeviceDisplayHeight)); } }
         public int DeviceSpacing { get => deviceSpacing; set { deviceSpacing = value; OnPropertyChanged(nameof(DeviceSpacing)); } }
@@ -77,14 +83,20 @@ namespace StarExplorer.Logic
         #region 全局设置
         public StartLocation StartLocation { get => startLocation; set { startLocation = value; OnPropertyChanged(nameof(StartLocation)); } }
         #endregion
+        public int TextFontSize { get => textFontSize; set { textFontSize = value; OnPropertyChanged(nameof(TextFontSize)); } }
+        public int LabelFontSize { get => labelFontSize; set { labelFontSize = value; OnPropertyChanged(nameof(LabelFontSize)); } }
+
 
         #region 配色设置
-        public string ThemeColor { get => themeColor; set { themeColor = value; OnPropertyChanged(nameof(ThemeColor)); } }
-        public string WindowDisplayBackgroundColor { get => windowDisplayBackgroundColor; set { windowDisplayBackgroundColor = value; OnPropertyChanged(nameof(WindowDisplayBackgroundColor)); } }
-        public string HoverBackgroundColor { get => hoverBackgroundColor; set { hoverBackgroundColor = value; OnPropertyChanged(nameof(HoverBackgroundColor)); } }
-        public string SelectedBackgroundColor { get => selectedBackgroundColor; set { selectedBackgroundColor = value; OnPropertyChanged(nameof(SelectedBackgroundColor)); } }
-        public string DeviceBackgroundColor { get => deviceBackgroundColor; set { deviceBackgroundColor = value; OnPropertyChanged(nameof(DeviceBackgroundColor)); } }
-        public string TabItemBackgroundColor { get => tabItemBackgroundColor; set { tabItemBackgroundColor = value; OnPropertyChanged(nameof(TabItemBackgroundColor)); } }
+        public string ThemeColor { get => themeColor; set { themeColor = value; OnPropertyChanged(nameof(ThemeColor)); OnPropertyChanged(nameof(ThemeColor_Color)); } }
+        public string WindowDisplayBackgroundColor { get => windowDisplayBackgroundColor; set { windowDisplayBackgroundColor = value; OnPropertyChanged(nameof(WindowDisplayBackgroundColor)); OnPropertyChanged(nameof(WindowDisplayBackgroundColor_Color)); } }
+        public string HoverBackgroundColor { get => hoverBackgroundColor; set { hoverBackgroundColor = value; OnPropertyChanged(nameof(HoverBackgroundColor)); OnPropertyChanged(nameof(HoverBackgroundColor_Color)); } }
+        public string SelectedBackgroundColor { get => selectedBackgroundColor; set { selectedBackgroundColor = value; OnPropertyChanged(nameof(SelectedBackgroundColor)); OnPropertyChanged(nameof(SelectedBackgroundColor_Color)); } }
+        public string DeviceBackgroundColor { get => deviceBackgroundColor; set { deviceBackgroundColor = value; OnPropertyChanged(nameof(DeviceBackgroundColor)); OnPropertyChanged(nameof(DeviceBackgroundColor_Color)); } }
+        public string TabItemBackgroundColor { get => tabItemBackgroundColor; set { tabItemBackgroundColor = value; OnPropertyChanged(nameof(TabItemBackgroundColor)); OnPropertyChanged(nameof(TabItemBackgroundColor_Color)); } }
+        public string DevicePanelLabelTextColor { get => devicePanelLabelTextColor; set { devicePanelLabelTextColor = value; OnPropertyChanged(nameof(DevicePanelLabelTextColor)); OnPropertyChanged(nameof(DevicePanelLabelTextColor_Color)); } }
+        public string DevicePanelTextColor { get => devicePanelTextColor; set { devicePanelTextColor = value; OnPropertyChanged(nameof(DevicePanelTextColor)); OnPropertyChanged(nameof(DevicePanelTextColor_Color)); } }
+
         //以下是提供转换器的颜色属性
         public Color ThemeColor_Color { get => Color.Parse(ThemeColor); }
         public Color WindowDisplayBackgroundColor_Color { get => Color.Parse(WindowDisplayBackgroundColor); }
@@ -92,12 +104,16 @@ namespace StarExplorer.Logic
         public Color SelectedBackgroundColor_Color { get => Color.Parse(SelectedBackgroundColor); }
         public Color DeviceBackgroundColor_Color { get => Color.Parse(DeviceBackgroundColor); }
         public Color TabItemBackgroundColor_Color { get => Color.Parse(TabItemBackgroundColor); }
+        public Color DevicePanelLabelTextColor_Color {  get => Color.Parse(DevicePanelLabelTextColor); }
+        public Color DevicePanelTextColor_Color { get => Color.Parse(DevicePanelTextColor); }
+
 
         #endregion
 
         #region 图片资源
         public IImage? DriveImage_System { get => driveImage_System; set { driveImage_System = value; OnPropertyChanged(nameof(DriveImage_System)); } }
         public IImage? DriveImage_Normal { get => driveImage_Normal; set { driveImage_Normal = value; OnPropertyChanged(nameof(DriveImage_Normal)); } }
+
         #endregion
 
         #endregion
@@ -110,19 +126,14 @@ namespace StarExplorer.Logic
         }
 
         //封装方法
-        private async void LoadFormFile()
+        private void LoadFormFile()
         {
-            //TODO:从文件加载设置
-            await Task.Run(() =>
-            {
-                //耗时加载操作请放在此处，此时UI还未启动 不需要调用OnPropertyChanged方法通知UI线程
-                System.Threading.Thread.Sleep(1000);
-            });
+            //耗时加载操作请放在此处，此时UI还未启动 不需要调用OnPropertyChanged方法通知UI线程
+            //此处不能使用异步方法，否则可能会导致UI线程在设置加载完成之前就访问了设置数据，从而引发异常
 
             //以下为测试数据，在实现从文件加载设置之前请勿删除
             driveImage_Normal = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
             driveImage_System = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
-
         }
 
         private void OnPropertyChanged(string propertyName)
@@ -158,7 +169,7 @@ namespace StarExplorer.Logic
         #endregion
 
         #region 设备显示模式的显示区设置
-        public int PanelMargin { get; set; }
+        public int DevicePanelMargin { get; set; }
         public int DeviceDisplayWidth { get; set; }
         public int DeviceDisplayHeight { get; set; }
         public int DeviceSpacing { get; set; }
@@ -167,6 +178,8 @@ namespace StarExplorer.Logic
 
         #region 全局设置
         public StartLocation StartLocation { get; set; }
+        public int TextFontSize { get; set; } 
+        public int LabelFontSize { get; set; }
         #endregion
 
         #region 配色设置
@@ -176,6 +189,8 @@ namespace StarExplorer.Logic
         public string SelectedBackgroundColor { get; set; }
         public string DeviceBackgroundColor { get; set; }
         public string TabItemBackgroundColor { get; set; }
+        public string DevicePanelLabelTextColor { get; set; }
+        public string DevicePanelTextColor { get; set; }
         //以下是提供转换器的颜色属性
         public Color ThemeColor_Color { get ; }
         public Color WindowDisplayBackgroundColor_Color { get; }
@@ -183,6 +198,8 @@ namespace StarExplorer.Logic
         public Color SelectedBackgroundColor_Color { get; }
         public Color DeviceBackgroundColor_Color { get; }
         public Color TabItemBackgroundColor_Color { get; }
+        public Color DevicePanelLabelTextColor_Color { get; }
+        public Color DevicePanelTextColor_Color { get; }
 
         #endregion
 

@@ -2,6 +2,7 @@
 using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Media;
+using StarExplorer.Logic;
 using System;
 using System.Threading;
 using System.Xml.Serialization;

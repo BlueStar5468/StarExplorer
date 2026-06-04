@@ -14,7 +14,7 @@ namespace StarExplorer.Logic
         ICoreData coreData;                //核心数据模块，提供对文件后端的访问和管理
         ISettings settings;                //设置模块，提供应用程序的配置和资源管理功能
         IMainWindowControler mainWindowControler; //主窗口控制器，负责主窗口的创建和管理
-
+        ITabManager tabManager;                //标签页管理器，负责标签页的创建、切换和关闭以及标签页内的数据管理
         #endregion
 
         #region 事件区
@@ -30,9 +30,10 @@ namespace StarExplorer.Logic
         {
             abstractionLayer = new AbstractionLayer();
             settings = new Settings();
-
+            tabManager = new TabManager(settings.MaxTabCount); 
             coreData = new CoreData(abstractionLayer);
-            mainWindowControler = new MainWindowControler(settings, coreData);
+
+            mainWindowControler = new MainWindowControler(settings, coreData, tabManager);
 
             //事件绑定
             BindEvents();
@@ -44,9 +45,10 @@ namespace StarExplorer.Logic
             #region Export
             //初始化事件
             Init += abstractionLayer.Initialize;
-            Init += coreData.Initialize;
             Init += settings.Initialize;
+            Init += coreData.Initialize;
             Init += mainWindowControler.Initialize;
+            Init += tabManager.Initialize;
             //事件广播
 
             #endregion
