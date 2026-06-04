@@ -10,6 +10,8 @@ using Avalonia.Platform;
 using Avalonia.Controls.Templates;
 using System.ComponentModel;
 using Avalonia.Data;
+using System.Diagnostics;
+using Avalonia.Interactivity;
 
 namespace StarExplorer.Views
 {
@@ -21,14 +23,10 @@ namespace StarExplorer.Views
         public Explorer(ExplorerData data)
         {
             InitializeComponent();
-
+            
             this.data = data;
 
-
-            //事件绑定
-            MainDisplayPanel.SizeChanged += OnMainDisplaySizeChangedAsync;
-            AddButton.Click += (s, e) => { data.tabManager.NewTab(GetDefaltDisplay(data.startLocation), data.tabBackgroundColor, out int _); };
-            data.tabManager.PropertyChanged += OnSelectedTabChanged;
+            BindEvent();
         }
 
         //以下构造器仅供设计时使用，运行时请使用带参数的构造器
@@ -56,59 +54,14 @@ namespace StarExplorer.Views
         {
             //注：入口线程为主线程
             if (data.tabManager.CurrentTabId == -1) return; //没有选中标签页时直接返回
-            MainDisplayPanel.Children.Add(data.tabManager.GetSelectedTab().Content);
-        }
-
-        //清除主要显示区的内容
-        private void ClearMainDisplay()
-        {
-            MainDisplayPanel.Children.Clear();
+            MountToMainDisplay(data.GetSelectedPanelContent());
         }
 
         //创建Tab栏
         private void CreateTabBar()
         {
-            var tabControl = new ItemsControl
-            {
-                ItemsPanel = new FuncTemplate<Panel?>(() =>
-                {
-                    StackPanel panel = new StackPanel
-                    {
-                        Orientation = Avalonia.Layout.Orientation.Horizontal,
-                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
-                    };
-                    return panel;
-                }),
-
-                ItemTemplate = new FuncDataTemplate<ITabContent>((tabContent, _) =>
-                {
-                    Controls.TabControl tabItem = new Controls.TabControl(
-                        Color.Parse(tabContent.BackgroundColor),
-                        data.TabWidth,
-                        data.TabHeight,
-                        sideMargin: 3,
-                        CornerRadius: 5,
-                        imageSize: 16,
-                        tabContent.Icon,
-                        imageMargin: 5,
-                        tabContent.Label,
-                        closeButtonSize: 16,
-                        id: tabContent.Index,
-                        data.HoverBackgroundColor,
-                        tabContent
-                    );
-                    //标签页事件绑定
-                    tabItem.TabClosed += data.tabManager.CloseTab;
-                    tabItem.TabClosed += data.CheckExit;
-                    tabItem.TabClicked += data.tabManager.OnTabClicked;
-
-                    return tabItem.GetInstance();
-                }, supportsRecycling: true)
-            };
-            tabControl.ItemsSource = data.tabManager.tabContents;
-
-            Grid.SetColumn(tabControl, 0);
-            TabGird.Children.Add(tabControl);
+            TabPanel tabPanel = new TabPanel(data);
+            TabGird.Children.Add(tabPanel.GetInstance());
         }
 
 
@@ -121,11 +74,11 @@ namespace StarExplorer.Views
             //提醒VM加载资源
             await data.LoadResorces();
             //创建Tab栏以及初始标签页
-            CreateTabBar();
-            //TODO: 初始标签页的内容应该根据实际需求进行设置，目前仅添加了一个空的 ItemsControl 作为占位符
+            //CreateTabBar();
+            //初始标签页创建并切换
             int id;
-            data.tabManager.NewTab(GetDefaltDisplay(data.startLocation), data.tabBackgroundColor, out id);
-            data.tabManager.SelectTab(id);
+            data.tabManager.NewTab(GetDefaltDisplay(data.startLocation), data.tabItemBackgroundColor, out id);
+            data.tabManager.SelectAndSwitchTab(id);
 
             RefreshDisplay();
         }
@@ -145,31 +98,32 @@ namespace StarExplorer.Views
             }
         }
 
-        //事件响应方法
-        public void OnMainDisplaySizeChangedAsync(object? sender, SizeChangedEventArgs args)
+        //封装方法
+        private void MountToMainDisplay(Panel content)
         {
-            data.mainDisplaySize = MainDisplayPanel.Bounds.Size;
+            ClearMainDisplay();
+            MainDisplayPanel.Children.Add(content);
         }
 
-        public void OnSelectedTabChanged(Object? sender, PropertyChangedEventArgs e)
+        private void ClearMainDisplay()
         {
-            if (e.PropertyName == "CurrentTabId")
-            {
-                foreach (var tab in data.tabManager.tabContents)
-                {
-                    if (tab.Index == data.tabManager.CurrentTabId)
-                    {
-                        tab.BackgroundColor = data.SelectedBackgroundColor;  
-                        tab.IsSelected = true;
-                    }
-                    else
-                    {
-                        tab.BackgroundColor = data.tabBackgroundColor;
-                        tab.IsSelected = false;
-                    }
-                }
-            }
-            RefreshDisplay();
+            MainDisplayPanel.Children.Clear();
         }
+
+        private void AddTabButton_Click(object sender, RoutedEventArgs e)
+        {
+            int id;
+            data.tabManager.NewTab(GetDefaltDisplay(data.startLocation), data.tabItemBackgroundColor, out id);
+            data.tabManager.SelectAndSwitchTab(id);
+        }
+
+        private void BindEvent()
+        {
+            //事件绑定
+            MainDisplayPanel.SizeChanged += data.MainDisplayPanelSizeBind;
+            data.DisplayContentChanged += RefreshDisplay;
+        }
+
+        //事件响应方法
     }
 }

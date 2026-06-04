@@ -1,0 +1,49 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:controls="using:StarExplorer.Controls"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400"
+             
+             x:Class="StarExplorer.Controls.TabBarControl"
+             x:DataType="controls:TabBarControlViewModel"
+             x:CompileBindings="true"
+             d:DataContext="{x:Static controls:TabBarControlViewModel.DesignInstance}"
+             x:Name="tabBar"
+             Background="Transparent"
+             Height="{Binding TabHeight}"
+             >
+    <Border Background="{Binding BackGroundColor}"
+            Margin="{Binding BarMargin}"
+            CornerRadius="{Binding CornerRadius}"
+            >
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <ItemsControl Grid.Column="0" ItemsSource="{Binding tabs}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <controls:TabItemControl>
+                            
+                        </controls:TabItemControl>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+
+
+            </ItemsControl>
+            <Border Grid.Column="1" Background="{Binding TabItemBackgroundColor}" Width="{Binding TabItemHeight}" Height="{Binding TabItemHeight}" Margin="{Binding ItemMargin}" CornerRadius="{Binding CornerRadius}" HorizontalAlignment="Left">
+                <Button Content="+" FontSize="{Binding TabFontSize}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"/>
+            </Border>
+        </Grid>
+    </Border>
+
+</UserControl>

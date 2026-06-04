@@ -6,12 +6,7 @@ using Avalonia.Media;
 using StarExplorer.Shared;
 using StarExplorer.ViewModels;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace StarExplorer.Controls
 {
@@ -82,21 +77,20 @@ namespace StarExplorer.Controls
                     }),
 
                     // 使用强类型的 FuncDataTemplate：为每个 LogicDevices 构建一个 DeviceControl 的实例并返回其 Visual（Border）
-                    ItemTemplate = new FuncDataTemplate<LogicDevices>((device, _) =>
+                    ItemTemplate = new FuncDataTemplate<IDeviceContent>((device, _) =>
                     {
                         IImage icon;
                         if (dataContext.driveImage_Normal == null) icon = null!;
                         else icon = dataContext.driveImage_Normal;
                         DeviceControl deviceControl = new DeviceControl(
-                                device.GetTitle(),
                                 16,
-                                icon,
                                 dataContext.deviceDisplayWidth,
                                 dataContext.deviceDisplayHeight,
-                                dataContext.itemCornerRadius,
+                                dataContext.ItemCornerRadius,
                                 dataContext.itemBackgroundColor,    //设备项背景色
                                 dataContext.HoverBackgroundColor,   //设备项Hover背景色
-                                dataContext.SelectedBackgroundColor //设备项选中背景色
+                                dataContext.SelectedBackgroundColor,//设备项选中背景色
+                                device
                             );
                         //diviceControl的数据绑定会在其本身进行
                         return deviceControl.GetInstance();
@@ -104,7 +98,7 @@ namespace StarExplorer.Controls
                 };
 
                 // 设置数据源（ItemsSorce 可以接受 List<T> 或 ObservableCollection<T>
-                itemsControl.ItemsSource = dataContext._coreData.Devices;
+                itemsControl.ItemsSource = dataContext.deviceManager.Devices;
 
                 // 把 ItemsControl 放入主显示区
                 root.Children.Add(itemsControl);
@@ -133,27 +127,6 @@ namespace StarExplorer.Controls
                 return (int)thickness.Left;
             }
             return 0;
-        }
-    }
-
-    public class CornerRadiusConverter : IValueConverter
-    {
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            if (value is int radius)
-            {
-                return new CornerRadius(radius);
-            }
-            return new CornerRadius(0);
-        }
-
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            if (value is CornerRadius cornerRadius)
-            {
-                return (int)cornerRadius.TopLeft; 
-            }
-            return null;
         }
     }
 }

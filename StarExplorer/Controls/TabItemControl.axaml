@@ -1,0 +1,30 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:controls="using:StarExplorer.Controls"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="40"
+             x:Class="StarExplorer.Controls.TabItemControl"
+             
+             x:DataType="controls:ITabContent"
+             Background="Transparent"
+             >
+
+            <Border x:Name="border" Background="{Binding ((controls:TabBarControlViewModel)DataContext).TabItemBackgroundColor, RelativeSource={RelativeSource ,AncestorType=controls:TabBarControl}}" 
+                                   Width="{Binding ((controls:TabBarControlViewModel)DataContext).TabItemWidth, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}" 
+                                   Height="{Binding ((controls:TabBarControlViewModel)DataContext).TabItemBorderHeight, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}"
+                                   Margin="{Binding ((controls:TabBarControlViewModel)DataContext).ItemMargin, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}"
+                                   CornerRadius="{Binding ((controls:TabBarControlViewModel)DataContext).CornerRadius, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}"
+                                   PointerPressed="OnTabClicked"
+                                   >
+                <DockPanel>
+                    <Image DockPanel.Dock="Left" Source="{Binding Icon}" Width="{Binding ((controls:TabBarControlViewModel)DataContext).TabItemHeight, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}" Height="{Binding ((controls:TabBarControlViewModel)DataContext).TabItemHeight, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}" Margin="{Binding ((controls:TabBarControlViewModel)DataContext).ItemMargin, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}"/>
+                        <TextBlock Text="{Binding Label}" FontSize="{Binding ((controls:TabBarControlViewModel)DataContext).TabFontSize,RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}" VerticalAlignment="Center"/>
+                            <Button Content="X" DockPanel.Dock="Right" HorizontalAlignment="Right" Width="{Binding ((controls:TabBarControlViewModel)DataContext).TabItemHeight, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}" Height="{Binding ((controls:TabBarControlViewModel)DataContext).TabItemHeight, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}" Margin="{Binding ((controls:TabBarControlViewModel)DataContext).ItemMargin, RelativeSource={RelativeSource AncestorType=controls:TabBarControl}}"
+                                    Click="OnCloseButtonClick"
+                                    />
+                </DockPanel>
+                    
+            </Border>
+
+</UserControl>

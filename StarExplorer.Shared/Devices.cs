@@ -15,6 +15,7 @@ namespace StarExplorer.Shared
         public long TotalSize;
         public long AvailableSize;
         public long TotalFreeSize; //注:总空闲空间和可用空间不相同
+        public string Title { get => GetTitle(); }
 
         bool isReady; //注:是否准备就绪，指设备是否可以访问和使用
 

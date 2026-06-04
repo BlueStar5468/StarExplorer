@@ -1,5 +1,6 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:compilerservices="using:System.Runtime.CompilerServices"
+        xmlns:control="using:StarExplorer.Control"
         xmlns:controls="using:StarExplorer.Controls"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -40,14 +41,24 @@
             </Border>
 
             <Border x:Name="TabBorder" Grid.Column="1" Background="{Binding ThemeColor}" Margin="3" CornerRadius="5" >
+                <!--
+                <controls:TabBarControl DataContext="{Binding TabBarControlVM}">
+                    
+                
+                
+                </controls:TabBarControl>
+                -->
+                
+                
                 <Grid x:Name="TabGird">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-
+                
+                
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="LightBlue" Width="{Binding TabWidth}" Height="{Binding TabHeight}" Margin="3,0,3,0"  CornerRadius="5">
+                    <Border Background="LightBlue" Width="{Binding TabItemWidth}" Height="{Binding TabHeight}" Margin="3,0,3,0"  CornerRadius="5">
                         <DockPanel>
                             <Image Source="/Assets/avalonia-logo.ico" DockPanel.Dock="Left" Width="16" Height="16" Margin="5"/>
                             <Panel Background="Red">
@@ -57,11 +68,14 @@
                         </DockPanel>
                     </Border>
                 </StackPanel>
+                
+
 
                     <Border Background="LightBlue" Width="32" Height="{Binding TabHeight}" Margin="3,0,3,0" CornerRadius="5" Grid.Column="1" HorizontalAlignment="Left">
-                        <Button x:Name="AddButton" Content="＋" Background="Transparent"/>
+                        <Button x:Name="AddButton" Content="＋" Background="Transparent" Click="AddTabButton_Click"/>
                     </Border>
                 </Grid>
+                
             </Border>
 
             <Border x:Name="WindowControlBorder" Grid.Column="2" Background="{Binding ThemeColor}" Margin="3" CornerRadius="5">
@@ -145,9 +159,9 @@
                 </StackPanel>
             </Border>
 
-            <StackPanel Grid.Column="1" x:Name="MainDisplayPanel" >
+            <Panel Grid.Column="1" x:Name="MainDisplayPanel">
           
-            </StackPanel>
+            </Panel>
 
         </Grid>
 

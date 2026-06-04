@@ -61,25 +61,20 @@ namespace StarExplorer.Controls
             }
         }
 
-        private void SwitchTab(int id)
+        private void SwitchTab(int sourceId, int targetId)
         {
-            foreach (var tab in tabContents)
-            {
-                if (tab.Index == id)
-                {
-                    currentTabId = id;
-                    OnPropertyChanged(nameof(CurrentTabId));
-                    return;
-                }
-            }
-            throw new Exception("未找到要切换的标签页");
+            GetTabByID(targetId);
+            currentTabId = targetId;
+            
+            OnPropertyChanged(nameof(CurrentTabId));
+            TabChanged?.Invoke(sourceId, targetId);
         }
 
         public void OnTabClicked(int id)
         {
             if (id != currentTabId)
             {
-                SwitchTab(id);
+                SwitchTab(currentTabId, id);
             }
         }
 
@@ -118,10 +113,21 @@ namespace StarExplorer.Controls
             throw new Exception("未找到选中的标签页");
         }
 
-        public void SelectTab(int id)
+        public ITabContent GetTabByID(int id)
         {
-            currentTabId = id;
-            OnPropertyChanged(nameof(CurrentTabId));
+            foreach (var tab in tabContents)
+            {
+                if (tab.Index == id)
+                {
+                    return tab;
+                }
+            }
+            throw new Exception("未找到指定ID的标签页");
+        }
+
+        public void SelectAndSwitchTab(int id)
+        {
+            SwitchTab(-1, id);
         }
 
         private void RecycleID(int id)
@@ -138,6 +144,7 @@ namespace StarExplorer.Controls
             });
         }
 
+        public event ITabManager.TabChangedEventHandler? TabChanged;
     }
 
     public interface ITabManager : INotifyPropertyChanged
@@ -145,54 +152,15 @@ namespace StarExplorer.Controls
         public ObservableCollection<ITabContent> tabContents { get; set; }
         public int CurrentTabId { get; }
         int TabCount { get; }
+        
+        public delegate void TabChangedEventHandler(int sourceid, int targetid);
+        public event TabChangedEventHandler? TabChanged;
+        
         public void NewTab(Panel content, String backgroundColor,out int newid);
         public void CloseTab(int id);
-        public void SelectTab(int id);
+        public void SelectAndSwitchTab(int id);
         public void OnTabClicked(int id);
         public ITabContent GetSelectedTab();
-    }
-
-    public class TabContent : INotifyPropertyChanged , ITabContent
-    {
-        private String label = "未命名标签页";
-        private String backgroundColor = null!;
-        private IImage icon = null!;
-        private int index = 0;
-        private Panel content = null!;//标签页的通用内容容器，具体内容由外部设置和管理
-        private bool isSelected = false;
-        public bool IsSelected { get => isSelected; set { if (isSelected != value) { isSelected = value; OnPropertyChanged(nameof(IsSelected)); } } }
-        public String Label { get => label; set { if (label != value) { label = value; OnPropertyChanged(nameof(Label)); } } }
-        public IImage Icon { get => icon; set { if (icon != value) { icon = value; OnPropertyChanged(nameof(Icon)); } } }
-        public int Index { get => index; set { if (index != value) { index = value; OnPropertyChanged(nameof(Index)); } } }
-        public Panel Content { get => content; set { if (content != value) { content = value; OnPropertyChanged(nameof(Content)); } } }
-        public String BackgroundColor { get => backgroundColor; set { if (backgroundColor != value) { backgroundColor = value; OnPropertyChanged(nameof(BackgroundColor)); } } }
-
-        public TabContent(String label, IImage icon, Panel content,int index, string backgroundColor)
-        {
-            this.Label = label;
-            this.Icon = icon;
-            this.Index = index;
-            this.Content = content;
-            this.BackgroundColor = backgroundColor;
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged(string propertyName)
-        {
-            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            });
-        }
-    }
-
-    public interface ITabContent : INotifyPropertyChanged
-    {
-        public String Label { get; set; }
-        public IImage Icon { get; set; }
-        public int Index { get; set; }
-        public Panel Content { get; set; }
-        public String BackgroundColor { get; set; }
-        public bool IsSelected { get; set; }
+        public ITabContent GetTabByID(int id);
     }
 }

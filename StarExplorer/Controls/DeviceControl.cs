@@ -24,7 +24,7 @@ namespace StarExplorer.Controls
         CancellationTokenSource? pointerEnteredAnimationCancelTokenSource;
         CancellationTokenSource? pointerExitedAnimationCancelTokenSource;
 
-        public DeviceControl(String deviceName, int fontSize, IImage deviceIcon, int width, int height, int cornerRadius, String backgroundColor, String HoverColor, String SelectedColor)
+        public DeviceControl(int fontSize, int width, int height, int cornerRadius, String backgroundColor, String HoverColor, String SelectedColor, IDeviceContent dataContext)
         {
             deviceBorder = new Border
             {
@@ -43,8 +43,9 @@ namespace StarExplorer.Controls
             grid.ColumnDefinitions.Add(icon);
 
             Image image = new Image();
+            image.DataContext = dataContext;
             image.Margin = new Thickness(5);
-            image.Source = deviceIcon;
+            image.Bind(Image.SourceProperty, new Avalonia.Data.Binding(nameof(dataContext.Icon)));
             image.Stretch = Stretch.Fill;
             image.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
             image.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
@@ -57,10 +58,11 @@ namespace StarExplorer.Controls
             grid.ColumnDefinitions.Add(other);
 
             StackPanel stackPanel = new StackPanel();
+            stackPanel.DataContext = dataContext;
             stackPanel.Spacing = 5;
 
             TextBlock deviceNameText = new TextBlock();
-            deviceNameText.Text = deviceName;
+            deviceNameText.Bind(TextBlock.TextProperty, new Avalonia.Data.Binding(nameof(dataContext.Name)));
             deviceNameText.FontSize = fontSize;
             stackPanel.Children.Add(deviceNameText);
 
