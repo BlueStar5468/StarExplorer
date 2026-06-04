@@ -4,7 +4,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using StarExplorer.Shared;
-using StarExplorer.ViewModels;
+using StarExplorer.Views;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -37,10 +37,10 @@ namespace StarExplorer.Controls
             CatgoryBorder_1.DataContext = dataContext;
             CatgoryBorder_1.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.ThemeColor)));
             CatgoryBorder_1.Bind(Border.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.DisplayMargin)) { Converter = new ThicknessConverter() });
-            CatgoryBorder_1.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemCornerRadius)) { Converter = new CornerRadiusConverter() });
+            CatgoryBorder_1.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.DeviceItemCornerRadius)) { Converter = new CornerRadiusConverter() });
             root.Children.Add(CatgoryBorder_1);
 
-            if ((dataContext._coreData == null || dataContext._coreData.Devices.Count == 0))
+            if (dataContext.devices.Count == 0)
             {
                 //未识别到设备，显示错误提示
                 Border border = new Border()
@@ -52,7 +52,7 @@ namespace StarExplorer.Controls
                 border.DataContext = dataContext;
                 border.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.mainDisplayBackgroundColor)));
                 border.Bind(Border.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.DisplayMargin)) { Converter = new ThicknessConverter() });
-                border.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemCornerRadius)) { Converter = new CornerRadiusConverter() });
+                border.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.DeviceItemCornerRadius)) { Converter = new CornerRadiusConverter() });
 
                 TextBlock textBlock = new TextBlock()
                 {
@@ -93,7 +93,7 @@ namespace StarExplorer.Controls
                                 icon,
                                 dataContext.deviceDisplayWidth,
                                 dataContext.deviceDisplayHeight,
-                                dataContext.itemCornerRadius,
+                                dataContext.deviceItemCornerRadius,
                                 dataContext.itemBackgroundColor,    //设备项背景色
                                 dataContext.HoverBackgroundColor,   //设备项Hover背景色
                                 dataContext.SelectedBackgroundColor //设备项选中背景色
@@ -104,7 +104,7 @@ namespace StarExplorer.Controls
                 };
 
                 // 设置数据源（ItemsSorce 可以接受 List<T> 或 ObservableCollection<T>
-                itemsControl.ItemsSource = dataContext._coreData.Devices;
+                itemsControl.ItemsSource = dataContext.devices;
 
                 // 把 ItemsControl 放入主显示区
                 root.Children.Add(itemsControl);

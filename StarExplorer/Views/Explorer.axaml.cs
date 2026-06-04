@@ -1,6 +1,5 @@
 ﻿using Avalonia.Controls;
 using Avalonia;
-using StarExplorer.ViewModels;
 using System.Threading.Tasks;
 using StarExplorer.Shared;
 using Avalonia.Media;
@@ -119,7 +118,7 @@ namespace StarExplorer.Views
 
             if (Design.IsDesignMode) return;
             //提醒VM加载资源
-            await data.LoadResorces();
+            //await data.LoadResorces();
             //创建Tab栏以及初始标签页
             CreateTabBar();
             //TODO: 初始标签页的内容应该根据实际需求进行设置，目前仅添加了一个空的 ItemsControl 作为占位符
