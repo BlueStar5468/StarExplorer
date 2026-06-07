@@ -5,7 +5,6 @@ using Avalonia.Media;
 using StarExplorer.Logic;
 using System;
 using System.Threading;
-using System.Xml.Serialization;
 
 namespace StarExplorer.Controls
 {
@@ -17,47 +16,49 @@ namespace StarExplorer.Controls
         CancellationTokenSource? pointerEnteredAnimationCancelTokenSource;
         CancellationTokenSource? pointerExitedAnimationCancelTokenSource;
         //控件实例
-        Border tab;
+        Border tabItem;
         int id;
-        ITabContent dataContext;
+        ITabDisplayContent displayContent;
 
-        public TabControl(Color backGroundColor, int width, int height,int sideMargin,int CornerRadius, int imageSize, IImage icon, int imageMargin, string label, int closeButtonSize, int id, String HoverColor, ITabContent dataContext)
+        public TabControl(TabBarPanelData dataContext, ITabDisplayContent displayContent)
         {
-            this.id = id;
-            this.dataContext = dataContext;
+            this.id = displayContent.Index;
+            this.displayContent = displayContent;
 
-            tab = new Border()
-            {
-                //Background = new SolidColorBrush(backGroundColor),
-                Width = width,
-                Height = height,
-                Margin = new Thickness(sideMargin,0,sideMargin,0),
-                CornerRadius = new CornerRadius(CornerRadius)
-            };
-
+            tabItem = new Border();
+            tabItem.DataContext = dataContext;
+            tabItem.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(ITabDisplayContent.CurrentBackgroundColor)) { Source = displayContent , Converter = new BrushConverter() } );
+            tabItem.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(TabBarPanelData.ItemCornerRadius)) {Converter = new CornerRadiusConverter() });
+            tabItem.Bind(Border.WidthProperty, new Avalonia.Data.Binding(nameof(TabBarPanelData.ItemWidth)));
+            tabItem.Bind(Border.HeightProperty, new Avalonia.Data.Binding(nameof(TabBarPanelData.ItemHeight)));
+            tabItem.Bind(Border.MarginProperty, new Avalonia.Data.Binding(nameof(TabBarPanelData.ItemMargin)) { Converter = new ThicknessConverter() });
 
             DockPanel dockPanel = new DockPanel();
+            dockPanel.DataContext = dataContext;
 
-            Image image = new Image()
-            {
-                //Source = icon,
-                Width = imageSize,
-                Height = imageSize,
-                Margin = new Thickness(imageMargin),
-            };
-            
+            Image image = new Image();
+            image.DataContext = displayContent;
+            image.Bind(Image.SourceProperty, new Avalonia.Data.Binding(nameof(ITabDisplayContent.Icon)));
+            image.Bind(Image.WidthProperty, new Avalonia.Data.Binding("DataContext.ImageSize") { RelativeSource = new Avalonia.Data.RelativeSource() {Mode= Avalonia.Data.RelativeSourceMode.FindAncestor, AncestorType = typeof(DockPanel) } } );
+            image.Bind(Image.HeightProperty, new Avalonia.Data.Binding("DataContext.ImageSize") { RelativeSource = new Avalonia.Data.RelativeSource() { Mode = Avalonia.Data.RelativeSourceMode.FindAncestor, AncestorType = typeof(DockPanel) } });
+            image.Bind(Image.MarginProperty, new Avalonia.Data.Binding("DataContext.ItemMargin") { RelativeSource = new Avalonia.Data.RelativeSource() { Mode = Avalonia.Data.RelativeSourceMode.FindAncestor, AncestorType = typeof(DockPanel) } , Converter = new ThicknessConverter() });
+
             Panel TextPanel = new Panel()
             {
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                MaxWidth = width - imageSize - 2 * imageMargin,
             };
+            TextPanel.DataContext = dataContext;
+            TextPanel.Bind(Panel.MaxWidthProperty, new Avalonia.Data.Binding(nameof(TabBarPanelData.MaxTextWidth)));
+
             TextBlock textBlock = new TextBlock()
             {
-                //Text = label,
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
             };
+            textBlock.DataContext = displayContent;
+            textBlock.Bind(TextBlock.TextProperty, new Avalonia.Data.Binding(nameof(ITabDisplayContent.Label)));
+
             TextPanel.Children.Add(textBlock);
 
             Button button = new Button()
@@ -65,9 +66,12 @@ namespace StarExplorer.Controls
                 Background = Brushes.Transparent,
                 Content = "X",
             };
+            button.DataContext = dataContext;
+            button.Bind(Button.WidthProperty, new Avalonia.Data.Binding(nameof(TabBarPanelData.CloseButtonSize)));
+            button.Bind(Button.HeightProperty, new Avalonia.Data.Binding(nameof(TabBarPanelData.CloseButtonSize)));
 
             button.Click += (s, e) =>
-            { TabClosed?.Invoke(this.id); };
+            { TabCloseButtonClicked?.Invoke(this.id); };
 
             DockPanel.SetDock(image, Dock.Left);
             DockPanel.SetDock(button, Dock.Right);
@@ -75,26 +79,18 @@ namespace StarExplorer.Controls
             dockPanel.Children.Add(TextPanel);
             dockPanel.Children.Add(button);
 
-            tab.Child = dockPanel;
-
-            //属性绑定
-            textBlock.DataContext = dataContext;
-            textBlock.Bind(TextBlock.TextProperty, new Avalonia.Data.Binding(nameof(ITabContent.Label)));
-            image.DataContext = dataContext;
-            image.Bind(Image.SourceProperty, new Avalonia.Data.Binding(nameof(ITabContent.Icon)));
-            tab.DataContext = dataContext;
-            tab.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(ITabContent.BackgroundColor)));
+            tabItem.Child = dockPanel;          
 
             //创建动画
-            pointerEnteredAnimation = Animations.GetGradientAnimation(200, backGroundColor, Color.Parse(HoverColor));
-            pointerExitedAnimation = Animations.GetGradientAnimation(200, Color.Parse(HoverColor), backGroundColor);
+            pointerEnteredAnimation = Animations.GetGradientAnimation(200, dataContext.TabItemBackGroundColor, dataContext.HoverColor);
+            pointerExitedAnimation = Animations.GetGradientAnimation(200, dataContext.HoverColor, dataContext.TabItemBackGroundColor);
             //事件绑定
-            tab.PointerEntered += OnPointerEntered;
-            tab.PointerExited += OnPointerExited;
-            tab.PointerPressed += StopAnimations; //注：此处停止动画必须先于触发点击事件的处理程序，以确保在点击时动画被正确停止
-            tab.PointerPressed += (s, e) =>
+            tabItem.PointerEntered += OnPointerEntered;
+            tabItem.PointerExited += OnPointerExited;
+            tabItem.PointerPressed += StopAnimations; //注：此处停止动画必须先于触发点击事件的处理程序，以确保在点击时动画被正确停止
+            tabItem.PointerPressed += (s, e) =>
             {
-                if (e.GetCurrentPoint(tab).Properties.IsLeftButtonPressed)
+                if (e.GetCurrentPoint(tabItem).Properties.IsLeftButtonPressed)
                 {
                     TabClicked?.Invoke(this.id);
                     e.Handled = true;
@@ -105,7 +101,7 @@ namespace StarExplorer.Controls
         //事件处理
         private void OnPointerEntered(object? sender, Avalonia.Input.PointerEventArgs e)
         {
-            if (dataContext.IsSelected == true) return;//如果标签页被选中，鼠标移入时不播放动画
+            if (displayContent.IsSelected == true) return;//如果标签页被选中，鼠标移入时不播放动画
             pointerExitedAnimationCancelTokenSource?.Cancel();
             pointerExitedAnimationCancelTokenSource?.Dispose();
             pointerExitedAnimationCancelTokenSource = null;
@@ -116,7 +112,7 @@ namespace StarExplorer.Controls
 
             try
             {
-                pointerEnteredAnimation.RunAsync(tab, pointerEnteredAnimationCancelTokenSource.Token);
+                pointerEnteredAnimation.RunAsync(tabItem, pointerEnteredAnimationCancelTokenSource.Token);
             }
             catch (OperationCanceledException){//动画被取消，安全地忽略异常
             }
@@ -126,7 +122,7 @@ namespace StarExplorer.Controls
 
         private void OnPointerExited(object? sender, Avalonia.Input.PointerEventArgs e)
         {
-            if (dataContext.IsSelected == true) return;//如果标签页被选中，鼠标移出时不播放动画
+            if (displayContent.IsSelected == true) return;//如果标签页被选中，鼠标移出时不播放动画
             pointerEnteredAnimationCancelTokenSource?.Cancel();
             pointerEnteredAnimationCancelTokenSource?.Dispose();
             pointerEnteredAnimationCancelTokenSource = null;
@@ -137,7 +133,7 @@ namespace StarExplorer.Controls
 
             try
             {
-                pointerExitedAnimation.RunAsync(tab, pointerExitedAnimationCancelTokenSource.Token);
+                pointerExitedAnimation.RunAsync(tabItem, pointerExitedAnimationCancelTokenSource.Token);
             }
             catch (OperationCanceledException)
             {//动画被取消，安全地忽略异常
@@ -157,7 +153,7 @@ namespace StarExplorer.Controls
         }
         //事件
         public delegate void TabClosedEventHandler(int id);
-        public event TabClosedEventHandler? TabClosed;
+        public event TabClosedEventHandler? TabCloseButtonClicked;
         public delegate void TabClickedEventHandler(int id);
         public event TabClickedEventHandler? TabClicked;
         public void Dispose()
@@ -170,12 +166,12 @@ namespace StarExplorer.Controls
             pointerExitedAnimationCancelTokenSource?.Dispose();
             pointerExitedAnimationCancelTokenSource = null;
             //解除事件绑定
-            tab.PointerEntered -= OnPointerEntered;
-            tab.PointerExited -= OnPointerExited;
-            tab.PointerPressed -= StopAnimations;
-            tab.PointerPressed -= (s, e) =>
+            tabItem.PointerEntered -= OnPointerEntered;
+            tabItem.PointerExited -= OnPointerExited;
+            tabItem.PointerPressed -= StopAnimations;
+            tabItem.PointerPressed -= (s, e) =>
             {
-                if (e.GetCurrentPoint(tab).Properties.IsLeftButtonPressed)
+                if (e.GetCurrentPoint(tabItem).Properties.IsLeftButtonPressed)
                 {
                     TabClicked?.Invoke(this.id);
                     e.Handled = true;
@@ -185,7 +181,7 @@ namespace StarExplorer.Controls
 
         public Border GetInstance()
         {
-            return tab;
+            return tabItem;
         }
     }
 }

@@ -18,7 +18,7 @@ namespace StarExplorer.Views
         //数据
         //依赖
         internal ITabManager tabManager;
-        //配置 注:以下配置尚未实现设置以及存储功能，且部分配置项可能会在未来的版本中被修改或移除，请谨慎使用和修改这些配置项。
+        //配置 注:重构后此部分属性大部分现已废弃，未来可能会被修改或移除，请谨慎使用和修改这些配置项。
         internal int deviceDisplayWidth = 200;
         internal int deviceDisplayHeight = 50;
         internal int deviceSpacing = 10;
@@ -26,8 +26,6 @@ namespace StarExplorer.Views
         internal int deviceItemCornerRadius = 10;
         private int tabWidth = 100;
         private int tabHeight = 30;
-        private int maxTabCount = 5;
-        internal StartLocation startLocation = StartLocation.Devices;
         private string themeColor = Colors.AliceBlue.ToString();
         internal string mainDisplayBackgroundColor = Colors.Gray.ToString();
         internal string HoverBackgroundColor = "rgb(224,238,249)";
@@ -37,6 +35,8 @@ namespace StarExplorer.Views
         public IImage? driveImage_Normal;
         public ObservableCollection<LogicDevices> devices { get; set; } = new ObservableCollection<LogicDevices>();
 
+        private int maxTabCount = 5;
+        internal StartLocation startLocation = StartLocation.Devices;
         //当前显示的内容类型
         internal DisplayMode displayMode;
 
@@ -152,6 +152,7 @@ namespace StarExplorer.Views
         public int DeviceItemCornerRadius { get => deviceItemCornerRadius; set { if (deviceItemCornerRadius != value) { deviceItemCornerRadius = value; OnPropertyChanged(nameof(DeviceItemCornerRadius)); } } }
         public int DeviceSpacing { get => deviceSpacing; set { if (deviceSpacing != value) { deviceSpacing = value; OnPropertyChanged(nameof(DeviceSpacing)); } } }
 
+        /* 已弃用部分
         //从文件路径加载 IImage（Bitmap）
         internal async Task<IImage> LoadBitmapFromPath(string path)
         {
@@ -176,5 +177,6 @@ namespace StarExplorer.Views
             }
             return result;
         }
+        */
     }
 }

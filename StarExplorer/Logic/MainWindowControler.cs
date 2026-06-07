@@ -22,6 +22,7 @@ namespace StarExplorer.Logic
         //管理的窗口
         Explorer? explorer;
         ExplorerData? explorerData;
+        TabBarPanelData? tabBarPanelData;
 
         //事件
         public event Action? AppExitRequested;
@@ -33,6 +34,13 @@ namespace StarExplorer.Logic
             this.tabManager = tabManager;
         }
 
+
+        public void Initialize()
+        {
+            CreateWindow();
+            BindEvents();
+        }
+
         private void CreateWindow()
         {
             //依据Settings创建DataContext
@@ -42,37 +50,59 @@ namespace StarExplorer.Logic
 
             explorer = new Explorer(explorerData);
             explorer.DataContext = explorerData;
-            
-            //创建自绘组件
         }
 
-        public void Initialize()
+        //内部操作方法
+        private void BindEvents()
         {
-            CreateWindow();
-            BindEvents();
+            if (explorer == null || explorerData == null)
+                throw new InvalidOperationException("主窗口或数据上下文尚未创建，无法绑定事件");
+            //explorerData.AppExitRequested += OnAppExitRequested;
+            explorer.AddButtonClicked += AddTab;
+            explorer.Opened += OnWindowOpened;
+            tabManager.PropertyChanged += OnSelectedTabChanged;
         }
-        
+
+        private void RefreshDisplay()
+        {
+            if (explorer == null) throw new Exception("主窗口尚未创建，无法刷新显示");
+            explorer.ClearMainDisplay();
+
+            if (tabManager.CurrentTabId == -1) return; //没有选中标签页时直接返回
+            explorer.MountToMainDisplay(tabManager.GetSelectedTab().Content);
+        }
+
+
+        private Panel CreateDevicePanel()
+        {
+            DevicePanelData data = new DevicePanelData(settings, coreData);
+            DevicesPanel devicesPanel = new DevicesPanel(data);
+
+            return devicesPanel.GetInstance();
+        }
+
+        internal void CreateTabBar()
+        {
+            tabBarPanelData = new TabBarPanelData(settings, tabManager);
+            TabBarPanel tabBarPanel = new TabBarPanel(tabBarPanelData);
+            explorer?.MountToTabGrid(tabBarPanel.GetInstance());
+            //标签页事件绑定
+            tabBarPanel.TabClicked += OnTabBarClicked;
+            tabBarPanel.TabCloseButtonClicked += OnTabCloseButtonClicked;
+        }
+
+        private void AddTab()
+        {
+            if (explorerData == null) throw new Exception("数据上下文尚未创建，无法添加标签页");
+            tabManager.NewTab(GetDefaltDisplay(explorerData.startLocation), out int _);
+        }
+
         //封装方法
         public Window GetWindow()
         {
             if (explorer == null) 
                 throw new InvalidOperationException("主窗口尚未创建");
             return explorer;
-        }
-
-        private void OnAppExitRequested()
-        {
-            AppExitRequested?.Invoke();
-        }
-
-        private void BindEvents()
-        {
-            if (explorer == null || explorerData == null) 
-                throw new InvalidOperationException("主窗口或数据上下文尚未创建，无法绑定事件");
-            //explorerData.AppExitRequested += OnAppExitRequested;
-            explorer.AddButtonClicked += AddTab;
-            explorer.Opened += OnWindowOpened;
-            tabManager.PropertyChanged += OnSelectedTabChanged;
         }
 
         public void SetLayoutMode()
@@ -108,106 +138,37 @@ namespace StarExplorer.Logic
             }
         }
 
-        private Panel CreateDevicePanel()
-        {
-            DevicePanelData data = new DevicePanelData(settings, coreData);
-            DevicesPanel devicesPanel = new DevicesPanel(data);
-
-            return devicesPanel.GetInstance();
-        }
-
-        internal void CreateTabBar()
-        {
-            var tabControl = new ItemsControl
-            {
-                ItemsPanel = new FuncTemplate<Panel?>(() =>
-                {
-                    StackPanel panel = new StackPanel
-                    {
-                        Orientation = Avalonia.Layout.Orientation.Horizontal,
-                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
-                    };
-                    return panel;
-                }),
-
-                ItemTemplate = new FuncDataTemplate<ITabContent>((tabContent, _) =>
-                {
-                    Controls.TabControl tabItem = new Controls.TabControl(
-                        Color.Parse(tabContent.BackgroundColor),
-                        explorerData.TabWidth,
-                        explorerData.TabHeight,
-                        sideMargin: 3,
-                        CornerRadius: 5,
-                        imageSize: 16,
-                        tabContent.Icon,
-                        imageMargin: 5,
-                        tabContent.Label,
-                        closeButtonSize: 16,
-                        id: tabContent.Index,
-                        explorerData.HoverBackgroundColor,
-                        tabContent
-                    );
-                    //标签页事件绑定
-                    tabItem.TabClosed += tabManager.CloseTab;
-                    //tabItem.TabClosed += data.CheckExit;
-                    tabItem.TabClicked += tabManager.OnTabClicked;
-
-                    return tabItem.GetInstance();
-                }, supportsRecycling: true)
-            };
-            tabControl.ItemsSource = tabManager.tabContents;
-
-            Panel container = new Panel();
-            Grid.SetColumn(container, 0);
-            container.Children.Add(tabControl);
-            explorer.MountToTabGrid(container);
-        }
-
-        private void AddTab()
-        {
-            if (explorerData == null) throw new Exception("数据上下文尚未创建，无法添加标签页");
-            tabManager.NewTab(GetDefaltDisplay(explorerData.startLocation), explorerData.tabBackgroundColor, out int _);
-        }
-
-        private void OnWindowOpened(object? sender , EventArgs e)
+        //事件响应方法
+        private void OnWindowOpened(object? sender, EventArgs e)
         {
             if (Design.IsDesignMode) return;
             if (explorerData == null) throw new Exception("数据上下文尚未创建，无法执行窗口打开后的初始化逻辑");
             if (explorer == null) throw new Exception("主窗口尚未创建，无法执行窗口打开后的初始化逻辑");
             //创建Tab栏以及初始标签页
             CreateTabBar();
-            //TODO: 初始标签页的内容应该根据实际需求进行设置，目前仅添加了一个空的 ItemsControl 作为占位符
             int id;
-            tabManager.NewTab(GetDefaltDisplay(explorerData.startLocation), explorerData.tabBackgroundColor, out id);
+            tabManager.NewTab(GetDefaltDisplay(explorerData.startLocation), out id);
             tabManager.SelectTab(id);
 
             RefreshDisplay();
         }
 
-        private void RefreshDisplay()
-        {
-            if (explorer == null) throw new Exception("主窗口尚未创建，无法刷新显示");
-            explorer.ClearMainDisplay();
-            
-            if (tabManager.CurrentTabId == -1) return; //没有选中标签页时直接返回
-            explorer.MountToMainDisplay(tabManager.GetSelectedTab().Content);
-        }
-
         private void OnSelectedTabChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (explorerData == null) throw new Exception("数据上下文尚未创建");
+            if (tabBarPanelData == null) throw new Exception("标签栏数据尚未创建，无法响应标签页变更事件");
             if (e.PropertyName == "CurrentTabId")
             {
-                foreach (var tab in tabManager.tabContents)
+                foreach (var tab in tabBarPanelData.TabDisplayContents)
                 {
                     if (tab.Index == tabManager.CurrentTabId)
                     {
-                        tab.BackgroundColor = explorerData.SelectedBackgroundColor;
+                        tab.CurrentBackgroundColor = Color.Parse(explorerData.SelectedBackgroundColor);
                         tab.IsSelected = true;
                     }
                     else
                     {
-                        tab.BackgroundColor = explorerData.tabBackgroundColor;
+                        tab.CurrentBackgroundColor = Color.Parse(explorerData.tabBackgroundColor);
                         tab.IsSelected = false;
                     }
                 }
@@ -215,6 +176,20 @@ namespace StarExplorer.Logic
             RefreshDisplay();
         }
 
+        private void OnTabBarClicked(int id)
+        {
+            tabManager.SelectTab(id);
+        }
+
+        private void OnTabCloseButtonClicked(int id)
+        {
+            tabManager.CloseTab(id);
+        }
+
+        private void OnAppExitRequested()
+        {
+            AppExitRequested?.Invoke();
+        }
 
     }
 

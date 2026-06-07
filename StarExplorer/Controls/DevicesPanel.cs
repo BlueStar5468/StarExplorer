@@ -16,7 +16,6 @@ namespace StarExplorer.Controls
     internal class DevicesPanel
     {
         //数据
-        DevicePanelData data;
         StackPanel root;
 
         public DevicesPanel(DevicePanelData dataContext)
@@ -111,46 +110,6 @@ namespace StarExplorer.Controls
         public StackPanel GetInstance()
         {
             return root;
-        }
-    }
-    public class ThicknessConverter : IValueConverter
-    {
-        public object Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
-        {
-            if (value is int margin)
-            {
-                return new Thickness(margin);
-            }
-            return new Thickness(0);
-        }
-        public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
-        {
-            if (value is Thickness thickness)
-            {
-                return (int)thickness.Left;
-            }
-            return 0;
-        }
-    }
-
-    public class CornerRadiusConverter : IValueConverter
-    {
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            if (value is int radius)
-            {
-                return new CornerRadius(radius);
-            }
-            return new CornerRadius(0);
-        }
-
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            if (value is CornerRadius cornerRadius)
-            {
-                return (int)cornerRadius.TopLeft; 
-            }
-            return null;
         }
     }
 }
