@@ -7,15 +7,21 @@ namespace StarExplorer.Abstractions
     /// 文件系统抽象层(FAL)，提供跨平台的文件系统访问接口。
     /// </summary>
     /// </note> FAL运行在单例模式
-    public class AbstractionLayer
+    public class AbstractionLayer : IAbstractionLayer
     {
-        //单例模式
-        public static AbstractionLayer Instance { get; } = new AbstractionLayer();
-
         //系统信息
         Platform? platform = null;
         IBackend? backend = null;
 
+        public AbstractionLayer()
+        {
+
+        }
+
+        public void Initialize()
+        {
+            InitFAL();
+        }
 
         public void InitFAL()
         {
@@ -35,10 +41,6 @@ namespace StarExplorer.Abstractions
                 platform = Platform.Android;
                 //TODO:设计安卓后端
             }
-
-             
-
-
         }
 
         public List<LogicDevices> GetDevices()
@@ -56,6 +58,12 @@ namespace StarExplorer.Abstractions
         }
 
 
+    }
+
+    public interface IAbstractionLayer : IModule
+    {
+            void InitFAL();
+            List<LogicDevices> GetDevices();
     }
 
     internal enum Platform

@@ -12,6 +12,8 @@ using Avalonia.Styling;
 using Avalonia.Animation.Easings;
 using System.Threading;
 using System.Security.Cryptography.X509Certificates;
+using StarExplorer.Shared;
+using Avalonia.Data;
 
 namespace StarExplorer.Controls
 {
@@ -24,27 +26,30 @@ namespace StarExplorer.Controls
         CancellationTokenSource? pointerEnteredAnimationCancelTokenSource;
         CancellationTokenSource? pointerExitedAnimationCancelTokenSource;
 
-        public DeviceControl(String deviceName, int fontSize, IImage deviceIcon, int width, int height, int cornerRadius, String backgroundColor, String HoverColor, String SelectedColor)
+        public DeviceControl(DevicePanelData dataContext, LogicDevices device)
         {
-            deviceBorder = new Border
-            {
-                Width = width,
-                Height = height,
-                CornerRadius = new CornerRadius(cornerRadius),
-                Background = new SolidColorBrush(Color.Parse(backgroundColor)),
-            };
+            deviceBorder = new Border();
+            deviceBorder.DataContext = dataContext;
+            deviceBorder.Bind(Border.WidthProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemWidth)));
+            deviceBorder.Bind(Border.HeightProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemHeight)));
+            deviceBorder.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemCornerRadius)) { Converter = new CornerRadiusConverter()});
+            deviceBorder.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.DeviceItemColor)) { Converter = new BrushConverter() });
 
             Grid grid = new Grid();
+            grid.DataContext = dataContext;
 
             //用于显示设备图标的列
             ColumnDefinition icon = new ColumnDefinition();
-            icon.Width = new GridLength(height);
+
+            //TODO:想办法把这个宽度绑到dataContext.ItemHeight上，保持图标为正方形（目前只能在构造函数里设置一次，无法响应 ItemHeight 的变化）
+            icon.Width = new(dataContext.ItemHeight);
 
             grid.ColumnDefinitions.Add(icon);
 
             Image image = new Image();
-            image.Margin = new Thickness(5);
-            image.Source = deviceIcon;
+            image.DataContext = dataContext;
+            image.Bind(Image.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemMargin)) { Converter = new ThicknessConverter() });
+            image.Bind(Image.SourceProperty, new Avalonia.Data.Binding(nameof(dataContext.DriveImage_Normal)));
             image.Stretch = Stretch.Fill;
             image.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
             image.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
@@ -57,11 +62,13 @@ namespace StarExplorer.Controls
             grid.ColumnDefinitions.Add(other);
 
             StackPanel stackPanel = new StackPanel();
+            stackPanel.DataContext = dataContext;
             stackPanel.Spacing = 5;
 
             TextBlock deviceNameText = new TextBlock();
-            deviceNameText.Text = deviceName;
-            deviceNameText.FontSize = fontSize;
+            deviceNameText.DataContext = device;
+            deviceNameText.Bind(TextBlock.TextProperty, new Avalonia.Data.Binding(nameof(device.Title)));
+            deviceNameText.Bind(TextBlock.FontSizeProperty, new Avalonia.Data.Binding("DataContext.TextSize") {  RelativeSource = new RelativeSource() { Mode = RelativeSourceMode.FindAncestor, AncestorType = typeof(StackPanel)} });
             stackPanel.Children.Add(deviceNameText);
 
             //TODO: 添加其他设备信息的显示，例如设备类型、容量等
@@ -73,8 +80,8 @@ namespace StarExplorer.Controls
             deviceBorder.Child = grid;
 
             //创建动画
-            pointerEnteredAnimation = Animations.GetGradientAnimation(200, Color.Parse(backgroundColor), Color.Parse(HoverColor));
-            pointerExitedAnimation = Animations.GetGradientAnimation(200, Color.Parse(HoverColor), Color.Parse(backgroundColor));
+            pointerEnteredAnimation = Animations.GetGradientAnimation(200, dataContext.DeviceItemColor, dataContext.HoverColor);
+            pointerExitedAnimation = Animations.GetGradientAnimation(200, dataContext.HoverColor, dataContext.DeviceItemColor);
 
             //事件处理
             deviceBorder.PointerEntered += async (s, e) =>

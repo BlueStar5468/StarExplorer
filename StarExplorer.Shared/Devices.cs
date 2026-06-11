@@ -1,22 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace StarExplorer.Shared
 {
-    public class LogicDevices
+    public class LogicDevices : INotifyPropertyChanged
     {
-        public string Name;
-        public string Type;
-        public string Label;
-        public string FileSystem;
-        public long TotalSize;
-        public long AvailableSize;
-        public long TotalFreeSize; //注:总空闲空间和可用空间不相同
+        private string? name;
+        private string? type;
+        private string? label;
+        private string? fileSystem;
+        private long totalSize;
+        private long availableSize;
+        private long totalFreeSize;
 
         bool isReady; //注:是否准备就绪，指设备是否可以访问和使用
+
+        public string? Name { get => name; set { name = value; OnPropertyChanged(nameof(Name)); OnPropertyChanged(nameof(Title)); } }
+        public string? Type { get => type; set { type = value; OnPropertyChanged(nameof(Type)); } }
+        public string? Label { get => label; set { label = value; OnPropertyChanged(nameof(Label)); OnPropertyChanged(nameof(Title)); } }
+        public string? FileSystem { get => fileSystem; set { fileSystem = value; OnPropertyChanged(nameof(FileSystem)); } }
+        public long TotalSize { get => totalSize; set { totalSize = value; OnPropertyChanged(nameof(TotalSize)); } }
+        public long AvailableSize { get => availableSize; set { availableSize = value; OnPropertyChanged(nameof(AvailableSize)); } }
+        public long TotalFreeSize { get => totalFreeSize; set { totalFreeSize = value; OnPropertyChanged(nameof(TotalFreeSize)); } }
+        //注:总空闲空间和可用空间不相同
+        public bool IsReady { get => isReady; set { isReady = value; OnPropertyChanged(nameof(IsReady)); } }
+        public string? Title { get => GetTitle(); }
+
 
         /// <summary>
         /// 初始化一个逻辑设备对象，包含设备名称、类型、标签、文件系统类型、总大小、可用大小和总空闲大小等属性。
@@ -37,11 +51,18 @@ namespace StarExplorer.Shared
             TotalSize = totalSize;
             AvailableSize = availableSize;
             TotalFreeSize = totalFreeSize;
-            this.isReady = isReady;
+            this.IsReady = isReady;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         //获取设备标题，格式为“(卷标)名称”，如果卷标不可用则使用“名称”作为标题
-        public String GetTitle()
+        private String GetTitle()
         {
             String title;
             if (Label != null && Name != null)

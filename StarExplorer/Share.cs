@@ -6,10 +6,6 @@ using System.Threading.Tasks;
 
 namespace StarExplorer
 {
-    internal class Share
-    {
-    }
-
     public enum ExplorerLayout
     {
         Desktop = 0,
