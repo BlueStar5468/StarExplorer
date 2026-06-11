@@ -1,13 +1,10 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Controls.Templates;
-using Avalonia.Interactivity;
 using Avalonia.Media;
 using StarExplorer.Controls;
 using StarExplorer.Shared;
 using StarExplorer.Views;
 using System;
 using System.Runtime.InteropServices;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace StarExplorer.Logic
 {
