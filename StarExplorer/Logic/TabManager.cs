@@ -21,6 +21,7 @@ namespace StarExplorer.Logic
         //标签页抽象数据列表
         public ObservableCollection<ITabContent> tabContents { get; set; } = new ObservableCollection<ITabContent>();
         public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action? SelectedTabChanged;
         public TabManager(int maxIDCount)
         {
             //id栈初始化(最少要有10个可分配id)
@@ -134,6 +135,13 @@ namespace StarExplorer.Logic
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             });
+            if (propertyName == nameof(CurrentTabId))
+            {
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    SelectedTabChanged?.Invoke();
+                });
+            }
         }
 
         public void Initialize()
@@ -144,6 +152,7 @@ namespace StarExplorer.Logic
 
     public interface ITabManager : INotifyPropertyChanged , IModule
     {
+        public event Action? SelectedTabChanged;
         public ObservableCollection<ITabContent> tabContents { get; set; }
         public int CurrentTabId { get; }
         int TabCount { get; }
