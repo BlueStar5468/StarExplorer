@@ -45,7 +45,7 @@ namespace StarExplorer.Controls
             CatgoryBorder_1.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemCornerRadius)) { Converter = new CornerRadiusConverter() });
             root.Children.Add(CatgoryBorder_1);
 
-            if (dataContext.Devices.Count == 0)
+            if (dataContext.DevicesContent.Count == 0)
             {
                 //未识别到设备，显示错误提示
                 Border border = new Border()
@@ -82,30 +82,44 @@ namespace StarExplorer.Controls
                     {
                         WrapPanel panel = new WrapPanel();
                         panel.DataContext = dataContext;
-                        panel.Bind(WrapPanel.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemMargin)) {Converter = new ThicknessConverter()});
+                        panel.Bind(WrapPanel.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemMargin)) { Converter = new ThicknessConverter() });
                         panel.Bind(WrapPanel.ItemSpacingProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemSpacing)));
                         return panel;
                     }),
 
                     // 使用强类型的 FuncDataTemplate：为每个 LogicDevices 构建一个 DeviceControl 的实例并返回其 Visual（Border）
-                    ItemTemplate = new FuncDataTemplate<LogicDevices>((device, _) =>
+                    ItemTemplate = new FuncDataTemplate<IDeviceDataContent>((device, _) =>
                     {
                         IImage icon;
                         if (dataContext.DriveImage_Normal == null) icon = null!;
                         else icon = dataContext.DriveImage_Normal;
-                        DeviceControl deviceControl = new DeviceControl(dataContext,device);
+                        DeviceControl deviceControl = new DeviceControl(dataContext, device);
+                        //事件绑定
+                        deviceControl.doubleTapped += (id) => ControlDoubleTapped?.Invoke(id);
+                        deviceControl.leftClicked += (id) => ControlLeftClicked?.Invoke(id);
+                        deviceControl.rightClicked += (id) => ControlRightClicked?.Invoke(id);
                         //diviceControl的数据绑定会在其本身进行
                         return deviceControl.GetInstance();
                     }, supportsRecycling: true)
                 };
 
                 // 设置数据源（ItemsSorce 可以接受 List<T> 或 ObservableCollection<T>
-                itemsControl.ItemsSource = dataContext.Devices;
+                itemsControl.ItemsSource = dataContext.DevicesContent;
 
                 // 把 ItemsControl 放入主显示区
                 root.Children.Add(itemsControl);
+
+                //在此处绑定背景面板点击事件
+                root.Background = new SolidColorBrush(Colors.Transparent); //确保背景可点击
+                root.PointerPressed += (s, e) => { if (e.Properties.IsLeftButtonPressed && ReferenceEquals(e.Source, root)) BackgroundPanelClicked?.Invoke(); };
             }
         }
+
+        public event Action<int>? ControlDoubleTapped;
+        public event Action<int>? ControlLeftClicked;
+        public event Action<int>? ControlRightClicked;
+        public event Action? BackgroundPanelClicked;
+
 
         public StackPanel GetInstance()
         {

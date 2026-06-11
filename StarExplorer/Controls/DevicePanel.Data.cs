@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.Design.Serialization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,8 @@ namespace StarExplorer.Controls
 {
     internal class DevicePanelData : INotifyPropertyChanged
     {
+        IDManager manager = new IDManager(0);
+
         private string? localized_LocalLabel;
         private string? localized_NoDevicesLabel;
 
@@ -35,7 +38,7 @@ namespace StarExplorer.Controls
         private IImage? driveImage_System;
         private IImage? driveImage_Normal;
 
-        private ObservableCollection<LogicDevices> devices = new ObservableCollection<LogicDevices>();
+        private ObservableCollection<IDeviceDataContent> devices = new ObservableCollection<IDeviceDataContent>();
 
         public string? Localized_LocalLabel { get => localized_LocalLabel; set { localized_LocalLabel = value; OnPropertyChanged(nameof(Localized_LocalLabel)); } }
         public string? Localized_NoDevicesLabel { get => localized_NoDevicesLabel; set { localized_NoDevicesLabel = value; OnPropertyChanged(nameof(Localized_NoDevicesLabel)); } }
@@ -50,11 +53,14 @@ namespace StarExplorer.Controls
         public int TextSize { get => textSize; set { textSize = value; OnPropertyChanged(nameof(TextSize)); } }
         public int LabelFontSize { get => labelFontSize; set { labelFontSize = value; OnPropertyChanged(nameof(labelFontSize)); } }
         public int ItemSpacing { get => itemSpacing; set { itemSpacing = value; OnPropertyChanged(nameof(ItemSpacing)); } }
-        public int ItemWidth { get => itemWidth; set { itemWidth = value; OnPropertyChanged(nameof(ItemWidth)); } }
-        public int ItemHeight { get => itemHeight; set { itemHeight = value; OnPropertyChanged(nameof(ItemHeight)); } }
+        public int ItemWidth { get => itemWidth; set { itemWidth = value; OnPropertyChanged(nameof(ItemWidth)); OnPropertyChanged(nameof(InfomationPanelWidth)); } }
+        public int ItemHeight { get => itemHeight; set { itemHeight = value; OnPropertyChanged(nameof(ItemHeight)); OnPropertyChanged(nameof(InfomationPanelWidth)); } }
         public IImage? DriveImage_System { get => driveImage_System; set { driveImage_System = value; OnPropertyChanged(nameof(DriveImage_System)); } }
         public IImage? DriveImage_Normal { get => driveImage_Normal; set { driveImage_Normal = value; OnPropertyChanged(nameof(DriveImage_Normal)); } }
-        public ObservableCollection<LogicDevices> Devices { get => devices; set { devices = value; OnPropertyChanged(nameof(Devices)); } }
+        public ObservableCollection<IDeviceDataContent> DevicesContent { get => devices; set { devices = value; OnPropertyChanged(nameof(DevicesContent)); } }
+
+
+        public int InfomationPanelWidth { get { return (ItemWidth - ItemHeight); } }
 
         public DevicePanelData(ISettings settings, ICoreData coreData)
         {
@@ -83,7 +89,7 @@ namespace StarExplorer.Controls
             ItemWidth = settings.DeviceDisplayWidth;
             ItemHeight = settings.DeviceDisplayHeight;
 
-            Devices = new ObservableCollection<LogicDevices>(coreData.Devices);
+            SyncDevice(coreData);
         }
 
         private void BindSettings(ISettings settings, ICoreData coreData)
@@ -146,10 +152,20 @@ namespace StarExplorer.Controls
                 switch (e.PropertyName)
                 {
                     case nameof(coreData.Devices):
-                        Devices = new ObservableCollection<LogicDevices>(coreData.Devices);
+                        SyncDevice(coreData);
                         break;
                 }
             };
+        }
+
+        private void SyncDevice(ICoreData coreData)
+        {
+            DevicesContent.Clear();
+            manager.Clear();
+            foreach (var logicDevice in coreData.Devices)
+            {
+                DevicesContent.Add(new DeviceDataContent(logicDevice, this, manager.GetID()));
+            }
         }
 
         private void OnPropertyChanged(string propertyName)
@@ -160,4 +176,44 @@ namespace StarExplorer.Controls
         public event PropertyChangedEventHandler? PropertyChanged;
 
     }
+
+
+
+
+    internal class DeviceDataContent : IDeviceDataContent
+    {
+        LogicDevices device;
+        bool isSelected;
+        int id;
+        Color currentBackgroundColor;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public int ID { get => id; }
+        public LogicDevices Device { get => device; }
+        public bool IsSelected { get => isSelected; set { isSelected = value; OnPropertyChanged(nameof(IsSelected)); } }
+        public Color CurrentBackgroundColor { get => currentBackgroundColor; set { currentBackgroundColor = value; OnPropertyChanged(nameof(CurrentBackgroundColor)); } }
+
+        public DeviceDataContent(LogicDevices device, DevicePanelData data, int id)
+        {
+            this.device = device;
+            isSelected = false;
+            this.id = id;
+            this.currentBackgroundColor = data.DeviceItemColor;
+        }
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    public interface IDeviceDataContent : INotifyPropertyChanged
+    {
+        int ID { get; }
+        LogicDevices Device { get; }
+        bool IsSelected { get; set; }
+        Color CurrentBackgroundColor { get; set; }
+    }
+
 }

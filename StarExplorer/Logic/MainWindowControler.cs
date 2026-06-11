@@ -47,6 +47,12 @@ namespace StarExplorer.Logic
 
             explorer = new Explorer(explorerData);
             explorer.DataContext = explorerData;
+
+            //创建Tab栏以及初始标签页
+            CreateTabBar();
+            int id;
+            tabManager.NewTab(GetDefaltDisplay(explorerData.startLocation), out id);
+            tabManager.SelectTab(id);
         }
 
         //内部操作方法
@@ -57,7 +63,7 @@ namespace StarExplorer.Logic
             //explorerData.AppExitRequested += OnAppExitRequested;
             explorer.AddButtonClicked += AddTab;
             explorer.Opened += OnWindowOpened;
-            tabManager.PropertyChanged += OnSelectedTabChanged;
+            tabManager.SelectedTabChanged += OnSelectedTabChanged;
         }
 
         private void RefreshDisplay()
@@ -72,10 +78,9 @@ namespace StarExplorer.Logic
 
         private Panel CreateDevicePanel()
         {
-            DevicePanelData data = new DevicePanelData(settings, coreData);
-            DevicesPanel devicesPanel = new DevicesPanel(data);
+            DevicePanelController devicePanelController = new DevicePanelController(settings, coreData);
 
-            return devicesPanel.GetInstance();
+            return devicePanelController.GetInstance();
         }
 
         internal void CreateTabBar()
@@ -139,35 +144,26 @@ namespace StarExplorer.Logic
         private void OnWindowOpened(object? sender, EventArgs e)
         {
             if (Design.IsDesignMode) return;
-            if (explorerData == null) throw new Exception("数据上下文尚未创建，无法执行窗口打开后的初始化逻辑");
-            if (explorer == null) throw new Exception("主窗口尚未创建，无法执行窗口打开后的初始化逻辑");
-            //创建Tab栏以及初始标签页
-            CreateTabBar();
-            int id;
-            tabManager.NewTab(GetDefaltDisplay(explorerData.startLocation), out id);
-            tabManager.SelectTab(id);
 
             RefreshDisplay();
         }
 
-        private void OnSelectedTabChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void OnSelectedTabChanged()
         {
             if (explorerData == null) throw new Exception("数据上下文尚未创建");
             if (tabBarPanelData == null) throw new Exception("标签栏数据尚未创建，无法响应标签页变更事件");
-            if (e.PropertyName == "CurrentTabId")
+
+            foreach (var tab in tabBarPanelData.TabDisplayContents)
             {
-                foreach (var tab in tabBarPanelData.TabDisplayContents)
+                if (tab.Index == tabManager.CurrentTabId)
                 {
-                    if (tab.Index == tabManager.CurrentTabId)
-                    {
-                        tab.CurrentBackgroundColor = Color.Parse(explorerData.SelectedBackgroundColor);
-                        tab.IsSelected = true;
-                    }
-                    else
-                    {
-                        tab.CurrentBackgroundColor = Color.Parse(explorerData.tabBackgroundColor);
-                        tab.IsSelected = false;
-                    }
+                    tab.CurrentBackgroundColor = Color.Parse(explorerData.SelectedBackgroundColor);
+                    tab.IsSelected = true;
+                }
+                else
+                {
+                    tab.CurrentBackgroundColor = Color.Parse(explorerData.tabBackgroundColor);
+                    tab.IsSelected = false;
                 }
             }
             RefreshDisplay();

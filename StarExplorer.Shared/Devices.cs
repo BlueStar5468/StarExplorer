@@ -24,9 +24,10 @@ namespace StarExplorer.Shared
         public string? Type { get => type; set { type = value; OnPropertyChanged(nameof(Type)); } }
         public string? Label { get => label; set { label = value; OnPropertyChanged(nameof(Label)); OnPropertyChanged(nameof(Title)); } }
         public string? FileSystem { get => fileSystem; set { fileSystem = value; OnPropertyChanged(nameof(FileSystem)); } }
-        public long TotalSize { get => totalSize; set { totalSize = value; OnPropertyChanged(nameof(TotalSize)); } }
-        public long AvailableSize { get => availableSize; set { availableSize = value; OnPropertyChanged(nameof(AvailableSize)); } }
+        public long TotalSize { get => totalSize; set { totalSize = value; OnPropertyChanged(nameof(TotalSize)); OnPropertyChanged((nameof(UsedSize))); } }
+        public long AvailableSize { get => availableSize; set { availableSize = value; OnPropertyChanged(nameof(AvailableSize)); OnPropertyChanged((nameof(UsedSize))); } }
         public long TotalFreeSize { get => totalFreeSize; set { totalFreeSize = value; OnPropertyChanged(nameof(TotalFreeSize)); } }
+        public long UsedSize { get => TotalSize - AvailableSize; }
         //注:总空闲空间和可用空间不相同
         public bool IsReady { get => isReady; set { isReady = value; OnPropertyChanged(nameof(IsReady)); } }
         public string? Title { get => GetTitle(); }
