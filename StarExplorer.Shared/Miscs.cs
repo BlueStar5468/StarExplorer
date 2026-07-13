@@ -84,4 +84,49 @@ namespace StarExplorer.Shared
         
 
     }
+
+
+
+
+    //文件相关
+
+    public class Item
+    {
+        private string name;
+        private string path;
+        private ItemType type;
+        private string createdTime;
+        private string modifiedTime;
+        private string? linkTarget;
+
+        //通用构造方式
+        public Item(string name, string path, ItemType type, string createdTime, string modifiedTime, string? linkTarget)
+        {
+            this.name = name;
+            this.path = path;
+            this.type = type;
+            this.createdTime = createdTime;
+            this.modifiedTime = modifiedTime;
+
+            this.linkTarget = linkTarget;
+        }
+        //封装属性
+        public string Name { get => name; }
+        public string Path { get => path; }
+        public ItemType Type { get => type; }
+        public string CreatedTime { get => createdTime; }
+        public string ModifiedTime { get => modifiedTime; }
+        public string LinkTarget { get => LinkTarget; set => LinkTarget = value; }
+    }
+
+    public enum ItemType
+    {
+        Folder,
+        Folder_Link,
+        File,
+        SymbolicLink,
+        hardLink,
+    }
+
+
 }

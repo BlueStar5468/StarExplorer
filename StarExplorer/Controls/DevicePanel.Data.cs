@@ -170,7 +170,10 @@ namespace StarExplorer.Controls
 
         private void OnPropertyChanged(string propertyName)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            });
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -204,7 +207,10 @@ namespace StarExplorer.Controls
 
         private void OnPropertyChanged(string propertyName)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            });
         }
     }
 

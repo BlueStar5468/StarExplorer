@@ -43,7 +43,7 @@ namespace StarExplorer.Views
 
         internal void MountToMainDisplay(Panel content)
         {
-            MainDisplayPanel.Children.Add(content);
+            SubExplorerBorder.Child = content;
         }
         
         internal void MountToTabGrid(Panel content)
@@ -54,7 +54,7 @@ namespace StarExplorer.Views
         //清除主要显示区的内容
         internal void ClearMainDisplay()
         {
-            MainDisplayPanel.Children.Clear();
+            SubExplorerBorder.Child = null;
         }
 
 

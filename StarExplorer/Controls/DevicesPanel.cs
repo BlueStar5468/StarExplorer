@@ -7,31 +7,50 @@ using StarExplorer.Shared;
 using StarExplorer.Views;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
 
 namespace StarExplorer.Controls
 {
-    internal class DevicesPanel
+    internal class DevicesPanel : IDisposable
     {
         //数据
         StackPanel root;
+        ScrollViewer scrollViewer;
+        Panel scrollViewerPanel;
+        //各子Control的存储
+        List<DeviceControl> controls = new List<DeviceControl>();
 
         public DevicesPanel(DevicePanelData dataContext)
         {
+            scrollViewerPanel = new Panel()
+            {
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
+            };
+
+            scrollViewer = new ScrollViewer()
+            {
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
+                HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+                VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+            };
+
             root = new StackPanel();
             //添加标签
             Border CatgoryBorder_1 = new Border()
             {
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                
+
             };
             TextBlock text = new TextBlock()
             {
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-            }; 
+            };
             text.DataContext = dataContext;
             text.Bind(TextBlock.TextProperty, new Avalonia.Data.Binding(nameof(dataContext.Localized_LocalLabel)));
             text.Bind(TextBlock.FontSizeProperty, new Avalonia.Data.Binding(nameof(dataContext.LabelFontSize)));
@@ -40,7 +59,7 @@ namespace StarExplorer.Controls
             CatgoryBorder_1.Child = text;
 
             CatgoryBorder_1.DataContext = dataContext;
-            CatgoryBorder_1.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.ThemeColor)) { Converter = new BrushConverter()});
+            CatgoryBorder_1.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.ThemeColor)) { Converter = new BrushConverter() });
             CatgoryBorder_1.Bind(Border.MarginProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemMargin)) { Converter = new ThicknessConverter() });
             CatgoryBorder_1.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemCornerRadius)) { Converter = new CornerRadiusConverter() });
             root.Children.Add(CatgoryBorder_1);
@@ -99,6 +118,8 @@ namespace StarExplorer.Controls
                         deviceControl.leftClicked += (id) => ControlLeftClicked?.Invoke(id);
                         deviceControl.rightClicked += (id) => ControlRightClicked?.Invoke(id);
                         //diviceControl的数据绑定会在其本身进行
+
+                        this.controls.Add(deviceControl);
                         return deviceControl.GetInstance();
                     }, supportsRecycling: true)
                 };
@@ -109,9 +130,14 @@ namespace StarExplorer.Controls
                 // 把 ItemsControl 放入主显示区
                 root.Children.Add(itemsControl);
 
+                scrollViewer.Content = root;
+                scrollViewerPanel.Children.Add(scrollViewer);
+
                 //在此处绑定背景面板点击事件
                 root.Background = new SolidColorBrush(Colors.Transparent); //确保背景可点击
                 root.PointerPressed += (s, e) => { if (e.Properties.IsLeftButtonPressed && ReferenceEquals(e.Source, root)) BackgroundPanelClicked?.Invoke(); };
+                //资源回收
+                scrollViewerPanel.Unloaded += (s, e) => { Dispose(); };
             }
         }
 
@@ -121,9 +147,19 @@ namespace StarExplorer.Controls
         public event Action? BackgroundPanelClicked;
 
 
-        public StackPanel GetInstance()
+        public Panel GetInstance()
         {
-            return root;
+            return scrollViewerPanel;
+        }
+
+        public void Dispose()
+        {
+            //释放资源
+            foreach (var control in controls)
+            {
+                control.Dispose();
+                //Debug.WriteLine($"DeviceControl disposed: {control.GetInstance().DataContext}");
+            }
         }
     }
 }
