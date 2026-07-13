@@ -1,20 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AvaloniaUI;
 using Avalonia.Media;
 using Avalonia.Controls;
-using Avalonia;
 using Avalonia.Animation;
-using Avalonia.Styling;
-using Avalonia.Animation.Easings;
 using System.Threading;
-using System.Security.Cryptography.X509Certificates;
-using StarExplorer.Shared;
 using Avalonia.Data;
-using System.Diagnostics;
 
 namespace StarExplorer.Controls
 {

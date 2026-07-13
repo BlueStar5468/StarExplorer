@@ -30,6 +30,18 @@ namespace StarExplorer.Logic
         int deviceSpacing = 10;
         int deviceCornerRadius = 10;
 
+        #endregion 文件显示模式的显示区设置
+        int FileItemHeight = 40;
+        int FileItemSpacing = 10;
+
+        #region 
+
+        #endregion
+
+        #region 子窗口设置
+        int sideBarWidth = 200;
+        int adressBoxHeight = 30;
+        int adressBoxCornerRadius = 5;
         #endregion
 
         #region 全局设置
@@ -78,6 +90,12 @@ namespace StarExplorer.Logic
         public int DeviceDisplayHeight { get => deviceDisplayHeight; set { deviceDisplayHeight = value; OnPropertyChanged(nameof(DeviceDisplayHeight)); } }
         public int DeviceSpacing { get => deviceSpacing; set { deviceSpacing = value; OnPropertyChanged(nameof(DeviceSpacing)); } }
         public int DeviceCornerRadius { get => deviceCornerRadius; set { deviceCornerRadius = value; OnPropertyChanged(nameof(DeviceCornerRadius)); } }
+        #endregion
+
+        #region 子窗口设置
+        public int SideBarWidth { get => sideBarWidth; set { sideBarWidth = value; OnPropertyChanged(nameof(SideBarWidth)); } }
+        public int AdressBoxHeight { get => adressBoxHeight; set { adressBoxHeight = value; OnPropertyChanged(nameof(AdressBoxHeight)); } }
+        public int AdressBoxCornerRadius { get => adressBoxCornerRadius; set { adressBoxCornerRadius = value; OnPropertyChanged(nameof(AdressBoxCornerRadius)); } }
         #endregion
 
         #region 全局设置
@@ -174,6 +192,12 @@ namespace StarExplorer.Logic
         public int DeviceDisplayHeight { get; set; }
         public int DeviceSpacing { get; set; }
         public int DeviceCornerRadius { get; set; }
+        #endregion
+
+        #region 子窗口设置
+        public int SideBarWidth { get; set; }
+        public int AdressBoxHeight { get; set; }
+        public int AdressBoxCornerRadius { get; set; }
         #endregion
 
         #region 全局设置

@@ -13,32 +13,17 @@ namespace StarExplorer.Views
     public class ExplorerData : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
-        
 
         //数据
         //依赖
         internal ITabManager tabManager;
-        //配置 注:重构后此部分属性大部分现已废弃，未来可能会被修改或移除，请谨慎使用和修改这些配置项。
-        internal int deviceDisplayWidth = 200;
-        internal int deviceDisplayHeight = 50;
-        internal int deviceSpacing = 10;
-        internal int displayMargin = 10;
-        internal int deviceItemCornerRadius = 10;
-        private int tabWidth = 100;
-        private int tabHeight = 30;
+        //配置
+        private string label = "StarExplorer";
         private string themeColor = Colors.AliceBlue.ToString();
-        internal string mainDisplayBackgroundColor = Colors.Gray.ToString();
-        internal string HoverBackgroundColor = "rgb(224,238,249)";
-        internal string SelectedBackgroundColor = Colors.Blue.ToString();
-        internal string itemBackgroundColor = Colors.LightGray.ToString();
-        internal string tabBackgroundColor = Colors.LightBlue.ToString();
-        public IImage? driveImage_Normal;
-        public ObservableCollection<LogicDevices> devices { get; set; } = new ObservableCollection<LogicDevices>();
+        private int tabItemHeight = 30;
+        private ExplorerLayout layout;
 
-        private int maxTabCount = 5;
         internal StartLocation startLocation = StartLocation.Devices;
-        //当前显示的内容类型
-        internal DisplayMode displayMode;
 
 
         //设计时数据构造器
@@ -49,28 +34,18 @@ namespace StarExplorer.Views
         };
         public ExplorerData() { }
 
-        public ExplorerData(ISettings settings, ICoreData coreData) 
+        public ExplorerData(ISettings settings, ICoreData coreData, ITabManager tabManager) 
         {
-            tabManager = new TabManager(maxTabCount);
+            this.tabManager = tabManager;
             
             InitSettings(settings); 
             BindSettings(settings);
-            InitAndBindResorces(coreData);
         }
 
 
         private void InitSettings(ISettings settings)
         {
-            deviceDisplayWidth = settings.DeviceDisplayWidth;
-            deviceDisplayHeight = settings.DeviceDisplayHeight;
-            deviceSpacing = settings.DeviceSpacing;
-            displayMargin = settings.DevicePanelMargin;
-            deviceItemCornerRadius = settings.DeviceCornerRadius;
-            ThemeColor = settings.ThemeColor;
-            mainDisplayBackgroundColor = settings.WindowDisplayBackgroundColor;
-
-            //以下是临时数据
-            driveImage_Normal = settings.DriveImage_Normal;
+            tabItemHeight = settings.TabItemHeight;
         }
         private void BindSettings(ISettings settings)
         {
@@ -78,44 +53,9 @@ namespace StarExplorer.Views
             {
                 switch (e.PropertyName)
                 {
-                    case nameof(settings.DeviceDisplayWidth):
-                        deviceDisplayWidth = settings.DeviceDisplayWidth;
+                    case nameof(settings.TabItemHeight):
+                        TabItemHeight = settings.TabItemHeight;
                         break;
-                    case nameof(settings.DeviceDisplayHeight):
-                        deviceDisplayHeight = settings.DeviceDisplayHeight;
-                        break;
-                    case nameof(settings.DeviceSpacing):
-                        DeviceSpacing = settings.DeviceSpacing;
-                        break;
-                    case nameof(settings.DevicePanelMargin):
-                        DisplayMargin = settings.DevicePanelMargin;
-                        break;
-                    case nameof(settings.DeviceCornerRadius):
-                        DeviceItemCornerRadius = settings.DeviceCornerRadius;
-                        break;
-                    case nameof(settings.ThemeColor):
-                        ThemeColor = settings.ThemeColor;
-                        break;
-                    case nameof(settings.WindowDisplayBackgroundColor):
-                        mainDisplayBackgroundColor = settings.WindowDisplayBackgroundColor;
-                        break;
-                    case nameof(settings.DriveImage_Normal):
-                        driveImage_Normal = settings.DriveImage_Normal;
-                        break;
-                }
-            };
-        }
-
-        private void InitAndBindResorces(ICoreData coreData)
-        {
-            devices = new ObservableCollection<LogicDevices>(coreData.Devices);
-
-            coreData.PropertyChanged += (sender, e) =>
-            {
-                if (e.PropertyName == nameof(coreData.Devices))
-                {
-                    devices = new ObservableCollection<LogicDevices>(coreData.Devices);
-                    OnPropertyChanged(nameof(devices));
                 }
             };
         }
@@ -129,8 +69,6 @@ namespace StarExplorer.Views
             });
         }
 
-        private string label = "StarExplorer";
-        private ExplorerLayout layout;
         public string Label
         {
             get => label;
@@ -145,38 +83,7 @@ namespace StarExplorer.Views
         }
 
         public ExplorerLayout Layout { get => layout; set { if (layout != value) { layout = value; OnPropertyChanged(nameof(Layout)); } } }
-        public int TabWidth { get => tabWidth; set { if (tabWidth != value) { tabWidth = value; OnPropertyChanged(nameof(TabWidth)); } } }
-        public int TabHeight { get => tabHeight; set { if (tabHeight != value) { tabHeight = value; OnPropertyChanged(nameof(TabHeight)); } } }
         public string ThemeColor { get => themeColor; set { if (themeColor != value) { themeColor = value; OnPropertyChanged(nameof(ThemeColor)); } } }
-        public int DisplayMargin { get => displayMargin; set { if (displayMargin != value) { displayMargin = value; OnPropertyChanged(nameof(DisplayMargin)); } } }
-        public int DeviceItemCornerRadius { get => deviceItemCornerRadius; set { if (deviceItemCornerRadius != value) { deviceItemCornerRadius = value; OnPropertyChanged(nameof(DeviceItemCornerRadius)); } } }
-        public int DeviceSpacing { get => deviceSpacing; set { if (deviceSpacing != value) { deviceSpacing = value; OnPropertyChanged(nameof(DeviceSpacing)); } } }
-
-        /* 已弃用部分
-        //从文件路径加载 IImage（Bitmap）
-        internal async Task<IImage> LoadBitmapFromPath(string path)
-        {
-            //使用文件流以避免锁定文件
-            await using var fs = System.IO.File.OpenRead(path);
-            return new Avalonia.Media.Imaging.Bitmap(fs);
-        }
-
-        //获取设备图标的 IImage 对象
-        internal async Task<IImage> GetDeviceIcon()
-        {
-            IImage result;
-            try
-            {
-                result = await Task.Run(() => LoadBitmapFromPath("Assets/drive_icon.png"));
-            }
-            catch (Exception)
-            {
-                //FallBack图标
-                var bitmap = await Task.Run(() => new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico"))));
-                result = bitmap;
-            }
-            return result;
-        }
-        */
+        public int TabItemHeight { get => tabItemHeight; set { if (tabItemHeight != value) { tabItemHeight = value; OnPropertyChanged(nameof(TabItemHeight)); } } }
     }
 }

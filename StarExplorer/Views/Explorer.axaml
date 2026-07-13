@@ -46,6 +46,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
+                    <!--
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="LightBlue" Width="{Binding TabWidth}" Height="{Binding TabHeight}" Margin="3,0,3,0"  CornerRadius="5">
                         <DockPanel>
@@ -57,8 +58,9 @@
                         </DockPanel>
                     </Border>
                 </StackPanel>
+                    -->
 
-                    <Border Background="LightBlue" Width="32" Height="{Binding TabHeight}" Margin="3,0,3,0" CornerRadius="5" Grid.Column="1" HorizontalAlignment="Left">
+                    <Border Background="LightBlue" Width="32" Height="{Binding TabItemHeight}" Margin="3,0,3,0" CornerRadius="5" Grid.Column="1" HorizontalAlignment="Left">
                         <Button x:Name="AddButton" Content="＋" Background="Transparent"/>
                     </Border>
                 </Grid>
@@ -78,6 +80,11 @@
             </Border>
         </Grid>
 
+        <Border x:Name="SubExplorerBorder">
+            
+        </Border>
+
+        <!--
         <Grid x:Name="Gird_0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"/>
@@ -145,11 +152,14 @@
                 </StackPanel>
             </Border>
 
-            <StackPanel Grid.Column="1" x:Name="MainDisplayPanel" >
-          
-            </StackPanel>
+            <Border Grid.Column="1" x:Name="MainDisplayBorder">
+                
+
+            </Border>
+            
 
         </Grid>
+        -->
 
 
     </DockPanel>

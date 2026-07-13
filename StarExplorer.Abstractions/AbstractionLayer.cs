@@ -57,13 +57,26 @@ namespace StarExplorer.Abstractions
             return devices;
         }
 
+        public List<Item> GetFoldersAndFilesByPath(string path)
+        {
+            List<Item> items = new List<Item>();
+            if (platform == Platform.Windows)
+            {
+                if (backend != null)
+                    backend.GetFoldersAndFilesByPath(path, out items);
+                else
+                    throw new InvalidOperationException("指定后端为空");
+            }
+            return items;
+        }
 
     }
 
     public interface IAbstractionLayer : IModule
     {
-            void InitFAL();
-            List<LogicDevices> GetDevices();
+        void InitFAL();
+        List<LogicDevices> GetDevices();
+        List<Item> GetFoldersAndFilesByPath(string path);
     }
 
     internal enum Platform

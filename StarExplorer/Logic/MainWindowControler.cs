@@ -41,8 +41,7 @@ namespace StarExplorer.Logic
         private void CreateWindow()
         {
             //依据Settings创建DataContext
-            explorerData = new ExplorerData(settings, coreData);
-            explorerData.displayMode = DisplayMode.Devices;//默认显示设备列表
+            explorerData = new ExplorerData(settings, coreData, tabManager);
             SetLayoutMode();
 
             explorer = new Explorer(explorerData);
@@ -51,7 +50,7 @@ namespace StarExplorer.Logic
             //创建Tab栏以及初始标签页
             CreateTabBar();
             int id;
-            tabManager.NewTab(GetDefaltDisplay(explorerData.startLocation), out id);
+            tabManager.NewTab(CreateSubExplorer(explorerData.startLocation, settings, coreData), out id);
             tabManager.SelectTab(id);
         }
 
@@ -96,7 +95,7 @@ namespace StarExplorer.Logic
         private void AddTab()
         {
             if (explorerData == null) throw new Exception("数据上下文尚未创建，无法添加标签页");
-            tabManager.NewTab(GetDefaltDisplay(explorerData.startLocation), out int _);
+            tabManager.NewTab(CreateSubExplorer(explorerData.startLocation, settings, coreData), out int _);
         }
 
         //封装方法
@@ -140,6 +139,12 @@ namespace StarExplorer.Logic
             }
         }
 
+        public Panel CreateSubExplorer(StartLocation startLocation, ISettings settings, ICoreData coreData)
+        {
+            SubExplorerController subExplorerController = new SubExplorerController(coreData, settings, startLocation);
+            return subExplorerController.GetInstance();
+        }
+
         //事件响应方法
         private void OnWindowOpened(object? sender, EventArgs e)
         {
@@ -157,12 +162,12 @@ namespace StarExplorer.Logic
             {
                 if (tab.Index == tabManager.CurrentTabId)
                 {
-                    tab.CurrentBackgroundColor = Color.Parse(explorerData.SelectedBackgroundColor);
+                    tab.CurrentBackgroundColor = tabBarPanelData.SelectedColor;
                     tab.IsSelected = true;
                 }
                 else
                 {
-                    tab.CurrentBackgroundColor = Color.Parse(explorerData.tabBackgroundColor);
+                    tab.CurrentBackgroundColor = tabBarPanelData.TabItemBackGroundColor;
                     tab.IsSelected = false;
                 }
             }

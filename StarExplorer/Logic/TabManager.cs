@@ -11,11 +11,9 @@ namespace StarExplorer.Logic
 {
     internal class TabManager : ITabManager , INotifyPropertyChanged
     {
-        //用于id分配的id栈
-        Stack<int> IDStack = new Stack<int>();
-        private int maxIDCount;
+        IDManager iDManager;
+
         private int currentTabId = -1;
-        public int UsedIDCount = 0; 
         public int TabCount { get => tabContents.Count; }
         public int CurrentTabId { get => currentTabId; }
         //标签页抽象数据列表
@@ -24,20 +22,20 @@ namespace StarExplorer.Logic
         public event Action? SelectedTabChanged;
         public TabManager(int maxIDCount)
         {
-            //id栈初始化(最少要有10个可分配id)
-            IDStack.Push(0);
-            if (maxIDCount > 10) this.maxIDCount = maxIDCount;
-            else this.maxIDCount = 10;
+            if (maxIDCount < 10) maxIDCount = 10;
+            iDManager = new IDManager(maxIDCount);
         }
 
         public void NewTab(Panel content, out int newid)
         {
-            int id = GetID();
-            TabContent newTabContent = new TabContent(
-                content,
-                id);
-            tabContents.Add(newTabContent);
-
+            int id = iDManager.GetID();
+            Avalonia.Threading.Dispatcher.UIThread.Invoke(() =>
+            {
+                TabContent newTabContent = new TabContent(
+                    content,
+                    id);
+                tabContents.Add(newTabContent);
+            });
             newid = id;
         }
 
@@ -55,8 +53,11 @@ namespace StarExplorer.Logic
             if (tabToRemove != null)
             {
                 tabToRemove.Content.Children.Clear();
-                tabContents.Remove(tabToRemove);
-                RecycleID(id);
+                Avalonia.Threading.Dispatcher.UIThread.Invoke(() =>
+                {
+                    tabContents.Remove(tabToRemove);
+                });
+                iDManager.RecycleID(id);
             }
         }
 
@@ -82,29 +83,6 @@ namespace StarExplorer.Logic
             }
         }
 
-        private int GetID()
-        {
-            if (UsedIDCount < maxIDCount)
-            {
-                int currentStack = IDStack.Pop();
-                UsedIDCount += 1;
-                if (IDStack.Count == 0)
-                {
-                    IDStack.Push(currentStack + 1);
-                    return currentStack;
-                }
-                else
-                {
-                    return currentStack;
-                }
-            }
-            else
-            {
-                //TODO:接入内部通知系统，通知用户无法创建新标签页
-                throw new Exception("已达到最大标签页数量，无法创建新标签页");
-            }
-        }
-
         public ITabContent GetSelectedTab()
         {
             foreach (var tab in tabContents)
@@ -121,12 +99,6 @@ namespace StarExplorer.Logic
         {
             currentTabId = id;
             OnPropertyChanged(nameof(CurrentTabId));
-        }
-
-        private void RecycleID(int id)
-        {
-            IDStack.Push(id);
-            UsedIDCount -= 1;
         }
 
         private void OnPropertyChanged(string propertyName)
