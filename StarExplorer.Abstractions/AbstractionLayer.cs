@@ -18,28 +18,34 @@ namespace StarExplorer.Abstractions
 
         }
 
-        public void Initialize()
+        public void Initialize(InitializeDataPack dataPack)
         {
+            this.platform = dataPack.Platform;
+
             InitFAL();
         }
 
         public void InitFAL()
         {
             //检测平台并初始化后端
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (this.platform == Platform.Windows)
             {
                 platform = Platform.Windows;
                 backend = new WindowsBackend.WindowsBackend();
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (this.platform == Platform.Linux)
             {
                 platform = Platform.Linux;
                 //TODO:设计linux后端
             }
-            else
+            else if (this.platform == Platform.Android)
             {
                 platform = Platform.Android;
                 //TODO:设计安卓后端
+            }
+            else 
+            {
+                throw new NotSupportedException("不支持的平台");
             }
         }
 
@@ -69,7 +75,6 @@ namespace StarExplorer.Abstractions
             }
             return items;
         }
-
     }
 
     public interface IAbstractionLayer : IModule
@@ -77,12 +82,5 @@ namespace StarExplorer.Abstractions
         void InitFAL();
         List<LogicDevices> GetDevices();
         List<Item> GetFoldersAndFilesByPath(string path);
-    }
-
-    internal enum Platform
-    {
-        Windows,
-        Linux,
-        Android
     }
 }

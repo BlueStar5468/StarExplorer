@@ -6,8 +6,10 @@ using StarExplorer.Logic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace StarExplorer.Views
 {
@@ -17,13 +19,18 @@ namespace StarExplorer.Views
         SubExplorerData dataContext;
         Panel root;
 
-        public SubExplorer(SubExplorerData dataContext, StartLocation startLocation, ICoreData coreData)
+        Border CurrentDisplayContent;
+
+        //事件
+        public Action? HomeButtonCliked;
+
+        public SubExplorer(SubExplorerData dataContext)
         {
             this.dataContext = dataContext;
-            root = BuildPanel(startLocation, coreData);
+            root = BuildPanel();
         }
 
-        private Panel BuildPanel(StartLocation startLocation, ICoreData coreData)
+        private Panel BuildPanel()
         {
             Panel root = new Panel();
             //分格
@@ -43,35 +50,60 @@ namespace StarExplorer.Views
             Grid.SetColumn(sideBorder, 0);
             grid.Children.Add(sideBorder);
             //主显示区
-            Grid grid1 = new Grid();
+            Grid MainDisplayGrid = new Grid();
             RowDefinition row0 = new RowDefinition();
             RowDefinition row1 = new RowDefinition();
             row0.Bind(RowDefinition.HeightProperty, new Binding(nameof(dataContext.AdressBoxHeight)) { Source = dataContext, Converter = new GridLengthConverter() });
-            grid1.RowDefinitions.Add(row0);
-            grid1.RowDefinitions.Add(row1);
+            MainDisplayGrid.RowDefinitions.Add(row0);
+            MainDisplayGrid.RowDefinitions.Add(row1);
 
             //地址栏
             {
                 Border adressBorder = new Border();
                 adressBorder.Bind(Border.BackgroundProperty, new Binding(nameof(dataContext.ThemeColor)) { Source = dataContext, Converter = new StarExplorer.Controls.BrushConverter() });
                 adressBorder.Bind(Border.CornerRadiusProperty, new Binding(nameof(dataContext.AdressBoxCornerRadius)) { Source = dataContext , Converter = new CornerRadiusConverter()});
+
+                //用于在地址栏左右侧放置按钮的Grid
+                Grid adressBorderGrid = new Grid();
+                ColumnDefinition adressBorderGridColumn0 = new ColumnDefinition() {Width = new GridLength(1, GridUnitType.Auto) };
+                ColumnDefinition adressBorderGridColumn1 = new ColumnDefinition();
+                adressBorderGrid.ColumnDefinitions.Add(adressBorderGridColumn0);
+                adressBorderGrid.ColumnDefinitions.Add(adressBorderGridColumn1);
+                 
                 
+                Button homeButton = new Button();
+                homeButton.Content = "H";
+                homeButton.Bind(Button.WidthProperty, new Binding(nameof(dataContext.AdressBoxHeight)) { Source = dataContext });
+                homeButton.Bind(Button.HeightProperty, new Binding(nameof(dataContext.AdressBoxHeight)) { Source = dataContext });
+                homeButton.Margin = new Avalonia.Thickness(10, 0, 0, 0);
+
                 TextBox adressBox = new TextBox();
                 adressBox.Bind(TextBox.CornerRadiusProperty, new Binding(nameof(dataContext.AdressBoxCornerRadius)) { Source = dataContext , Converter = new CornerRadiusConverter()});
                 adressBox.Margin = new Avalonia.Thickness(10, 0, 10, 0);
                 //TODO:绑定地址内容至核心
 
-                adressBorder.Child = adressBox;
+                Grid.SetColumn(adressBox, 1);
+                Grid.SetColumn(homeButton, 0);
+                adressBorderGrid.Children.Add(homeButton);
+                adressBorderGrid.Children.Add(adressBox);
+
+                adressBorder.Child = adressBorderGrid;
                 Grid.SetRow(adressBorder, 0);
-                grid1.Children.Add(adressBorder);
+                MainDisplayGrid.Children.Add(adressBorder);
+
+                //地址栏事件绑定
+                homeButton.Click += (s, e) =>
+                {
+                    this.HomeButtonCliked?.Invoke();
+                };
             }
 
-            var mainDisplay = GetDefaltDisplay(startLocation, dataContext.settings, coreData);
-            Grid.SetRow(mainDisplay, 1);
-            grid1.Children.Add(mainDisplay);
+            CurrentDisplayContent = new Border();
+            Grid.SetRow(CurrentDisplayContent, 1);
+            MainDisplayGrid.Children.Add(CurrentDisplayContent);
 
-            Grid.SetColumn(grid1, 1);
-            grid.Children.Add(grid1);
+            Grid.SetColumn(MainDisplayGrid, 1);
+            grid.Children.Add(MainDisplayGrid);
 
             root.Children.Add(grid);
             return root;
@@ -83,26 +115,16 @@ namespace StarExplorer.Views
         }
 
         //封装方法
-        private Panel GetDefaltDisplay(StartLocation startLocation, ISettings settings, ICoreData coreData)
+
+        internal void SetMainDisplayContent(Panel content)
         {
-            //获取标签页的初始内容
-            if (startLocation == StartLocation.Devices)
-            {
-                var panel = CreateDevicePanel(settings, coreData);
-                return panel;
-            }
-            else
-            {
-                //TODO: 根据其他起始位置生成相应的显示内容，目前仅实现了设备显示的生成逻辑
-                return new StackPanel();
-            }
+            Grid.SetRow(content, 1);
+            CurrentDisplayContent.Child = content;
         }
 
-        private Panel CreateDevicePanel(ISettings settings, ICoreData coreData)
+        internal void ClearDisplayContent()
         {
-            DevicePanelController devicePanelController = new DevicePanelController(settings, coreData);
-
-            return devicePanelController.GetInstance();
+            CurrentDisplayContent.Child = new Border();
         }
     }
 }

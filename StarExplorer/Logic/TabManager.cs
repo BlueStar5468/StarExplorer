@@ -52,9 +52,9 @@ namespace StarExplorer.Logic
             }
             if (tabToRemove != null)
             {
-                tabToRemove.Content.Children.Clear();
                 Avalonia.Threading.Dispatcher.UIThread.Invoke(() =>
                 {
+                    tabToRemove.Content.Children.Clear();
                     tabContents.Remove(tabToRemove);
                 });
                 iDManager.RecycleID(id);
@@ -116,7 +116,7 @@ namespace StarExplorer.Logic
             }
         }
 
-        public void Initialize()
+        public void Initialize(InitializeDataPack initializeDataPack)
         {
             
         }

@@ -152,6 +152,25 @@ namespace StarExplorer.Controls
             return scrollViewerPanel;
         }
 
+        internal String GetDeviceNameById(int id)
+        {
+            foreach (var control in controls)
+            {
+                if (control.GetID() == id)
+                {
+                    if (control.GetDeviceName() != null)
+                    {
+                        return control.GetDeviceName();
+                    }
+                    else
+                    {
+                        return "Unknown"; //设备可能未挂载
+                    }
+                }
+            }
+            return "UnFind"; //未找到设备
+        }
+
         public void Dispose()
         {
             //释放资源

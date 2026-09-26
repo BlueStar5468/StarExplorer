@@ -18,6 +18,8 @@ namespace StarExplorer.Controls
         //管理的DevicePanel
         DevicePanelData panelData = null!;
         DevicesPanel panel = null!;
+        //事件
+        public Action<String>? DeviceOpened; 
 
 
         public DevicePanelController(ISettings settings, ICoreData coreData)
@@ -90,7 +92,23 @@ namespace StarExplorer.Controls
         private void OnControlDoubleTapped(int id)
         {
             //处理鼠标双击设备项的事件
-            Debug.WriteLine($"设备项{id}被双击了");
+            String Temp = panel.GetDeviceNameById(id);
+            String OpenedDeviceName;
+            if (Temp == "Unknown")
+            {
+                //TODO: 弹出提示，设备未挂载
+                return;
+            }
+            else if (Temp == "UnFind")
+            {
+                //TODO: 弹出提示，设备未找到
+                return; 
+            }
+            else
+            {
+                OpenedDeviceName = panel.GetDeviceNameById(id);
+                this.DeviceOpened?.Invoke(OpenedDeviceName);
+            }
         }
 
         private void OnBackgroundPanelClicked()
