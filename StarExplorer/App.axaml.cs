@@ -23,8 +23,11 @@ namespace StarExplorer
             //初始化逻辑层 整个程序会从逻辑层开始展开
             LogicRoot logicRoot = new LogicRoot();
 
+            //目标系统初始化
+            System.OperatingSystem targetSystem = GetTargetSystem();
+
             //开始启动核心层
-            logicRoot.Initialize();
+            logicRoot.Initialize(targetSystem);
             
             Window explorer = logicRoot.GetMainWindow();
 #if DEBUG
@@ -59,6 +62,12 @@ namespace StarExplorer
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private System.OperatingSystem GetTargetSystem()
+        {
+            var os = Environment.OSVersion;
+            return os;
         }
     }
 }

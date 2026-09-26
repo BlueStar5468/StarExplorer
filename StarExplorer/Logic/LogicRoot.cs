@@ -2,6 +2,7 @@
 using StarExplorer.Abstractions;
 using System;
 using System.Runtime.InteropServices;
+using StarExplorer.Shared;
 
 namespace StarExplorer.Logic
 {
@@ -19,10 +20,15 @@ namespace StarExplorer.Logic
 
         #region 事件区
         //无参数事件
-        private event Action? Init;          //应用程序启动事件 在此事件中应完成所有模块的初始化
+        private event Action<InitializeDataPack>? Init;          //应用程序启动事件 在此事件中应完成所有模块的初始化
         public event Action? AppExitStarted; //应用程序退出事件 在此事件中应完成所有模块的清理工作
-        //有参数事件
-        
+                                             //有参数事件
+
+        #endregion
+
+        #region 数据区
+        System.OperatingSystem? operatingSystem;
+        InitializeDataPack initializeDataPack;
         #endregion
 
         //如需替换模块实现，请在此处修改构造器中的实例化代码，并确保新的实现类符合接口要求。
@@ -60,15 +66,38 @@ namespace StarExplorer.Logic
         }
 
         //封装方法
-        public void Initialize()
+        public void Initialize(System.OperatingSystem os)
         {
+            this.operatingSystem = os;
+            InitializeSystemData();
             //初始化事件发出
-            Init?.Invoke();
+            Init?.Invoke(initializeDataPack);
         }
 
         public Window GetMainWindow()
         {
             return mainWindowControler.GetWindow();
+        }
+        
+        private void InitializeSystemData()
+        {
+            this.initializeDataPack = new InitializeDataPack()
+            {
+                OperatingSystem = this.operatingSystem,
+                Platform = GetPlatform()
+            };
+        }
+
+        private Platform GetPlatform()
+        {
+            if (System.OperatingSystem.IsWindows())
+                return Platform.Windows;
+            else if (System.OperatingSystem.IsLinux())
+                return Platform.Linux;
+            else if (System.OperatingSystem.IsAndroid())
+                return Platform.Android;
+            else
+                return Platform.Unknown;
         }
 
         //事件响应方法

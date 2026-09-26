@@ -24,7 +24,7 @@ namespace StarExplorer.Logic
 
 
         //外部接口
-        public void Initialize()
+        public void Initialize(InitializeDataPack initializeDataPack)
         {
             RefreshDevices();
         }
@@ -68,5 +68,6 @@ namespace StarExplorer.Logic
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         public List<LogicDevices> Devices { get; set; }
+        public List<Item> GetFoldersAndFilesByPath(string path);
     }
 }

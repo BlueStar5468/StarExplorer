@@ -161,6 +161,23 @@ namespace StarExplorer.Controls
             return deviceBorder;
         }
 
+        internal int GetID()
+        {
+            return deviceDataContent.ID;
+        }
+
+        internal string GetDeviceName()
+        {
+            if (deviceDataContent.Device.Name != null)
+            {
+                return deviceDataContent.Device.Name; 
+            }
+            else
+            {
+                return "Unknown"; //设备可能未挂载
+            }
+        }
+
         private void StopAllAnimations()
         {
             pointerEnteredAnimationCancelTokenSource?.Cancel();

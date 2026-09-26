@@ -16,9 +16,15 @@
         MinHeight="440"
 
         WindowDecorations="Full"
+        
+        
 
         Icon="/Assets/avalonia-logo.ico"
         Title="StarExplorer">
+        <!--
+        Background="Transparent"
+        TransparencyLevelHint="AcrylicBlur"
+        -->
 
     <DockPanel Background="LightGray">
         <Grid DockPanel.Dock="Top" x:Name="TitleBarGird" Height="40">

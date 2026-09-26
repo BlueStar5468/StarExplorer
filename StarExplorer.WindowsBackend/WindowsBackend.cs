@@ -90,7 +90,7 @@ namespace StarExplorer.WindowsBackend
                     Item item = new Item(
                         file.Name,
                         file.FullName,
-                        file.LinkTarget == null ? ItemType.File : ItemType.hardLink,
+                        file.LinkTarget == null ? ItemType.File : ItemType.HardLink,
                         file.CreationTime.ToString(),
                         file.LastWriteTime.ToString(),
                         file.LinkTarget

@@ -116,7 +116,7 @@ namespace StarExplorer.Shared
         public ItemType Type { get => type; }
         public string CreatedTime { get => createdTime; }
         public string ModifiedTime { get => modifiedTime; }
-        public string LinkTarget { get => LinkTarget; set => LinkTarget = value; }
+        public string? LinkTarget { get => linkTarget; set => linkTarget = value; }
     }
 
     public enum ItemType
@@ -125,8 +125,23 @@ namespace StarExplorer.Shared
         Folder_Link,
         File,
         SymbolicLink,
-        hardLink,
+        HardLink,
     }
 
+    //初始化参数表
+    public struct InitializeDataPack
+    {
+        public System.OperatingSystem? OperatingSystem;
+        public Platform? Platform;
+    }
+
+    //系统平台枚举
+    public enum Platform
+    {
+        Windows,
+        Linux,
+        Android,
+        Unknown
+    }
 
 }

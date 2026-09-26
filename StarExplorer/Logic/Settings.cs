@@ -31,8 +31,13 @@ namespace StarExplorer.Logic
         int deviceCornerRadius = 10;
 
         #endregion 文件显示模式的显示区设置
-        int FileItemHeight = 40;
-        int FileItemSpacing = 10;
+        int fileItemHeight = 40;
+        int fileItemSpacing = 10;
+        int fileItemInternalMargin = 5;
+
+        IImage? folderIcon;
+        IImage? folderLinkIcon;
+        IImage? fileIcon;
 
         #region 
 
@@ -92,6 +97,20 @@ namespace StarExplorer.Logic
         public int DeviceCornerRadius { get => deviceCornerRadius; set { deviceCornerRadius = value; OnPropertyChanged(nameof(DeviceCornerRadius)); } }
         #endregion
 
+        #region 文件显示模式的显示区设置
+        public int FileItemHeight { get => fileItemHeight; set { fileItemHeight = value; OnPropertyChanged(nameof(FileItemHeight)); } }
+        public int FileItemSpacing { get => fileItemSpacing; set { fileItemSpacing = value; OnPropertyChanged(nameof(FileItemSpacing)); } }
+        public int FileItemInternalMargin { get => fileItemInternalMargin; set { fileItemInternalMargin = value; OnPropertyChanged(nameof(FileItemInternalMargin)); } }
+
+
+        public IImage? FolderIcon { get => folderIcon; set { folderIcon = value; OnPropertyChanged(nameof(FolderIcon)); } }
+        public IImage? FolderLinkIcon { get => folderLinkIcon; set { folderLinkIcon = value; OnPropertyChanged(nameof(FolderLinkIcon)); } }
+        public IImage? FileIcon { get => fileIcon; set { fileIcon = value; OnPropertyChanged(nameof(FileIcon)); } }
+
+
+        #endregion
+
+
         #region 子窗口设置
         public int SideBarWidth { get => sideBarWidth; set { sideBarWidth = value; OnPropertyChanged(nameof(SideBarWidth)); } }
         public int AdressBoxHeight { get => adressBoxHeight; set { adressBoxHeight = value; OnPropertyChanged(nameof(AdressBoxHeight)); } }
@@ -138,7 +157,7 @@ namespace StarExplorer.Logic
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public void Initialize()
+        public void Initialize(InitializeDataPack initializeDataPack)
         {
             LoadFormFile();
         }
@@ -152,6 +171,10 @@ namespace StarExplorer.Logic
             //以下为测试数据，在实现从文件加载设置之前请勿删除
             driveImage_Normal = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
             driveImage_System = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
+        
+            folderIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
+            folderLinkIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
+            fileIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
         }
 
         private void OnPropertyChanged(string propertyName)
@@ -192,6 +215,17 @@ namespace StarExplorer.Logic
         public int DeviceDisplayHeight { get; set; }
         public int DeviceSpacing { get; set; }
         public int DeviceCornerRadius { get; set; }
+        #endregion
+
+        #region 文件显示模式的显示区设置
+        public int FileItemHeight { get; set; }
+        public int FileItemSpacing { get; set; }
+        public int FileItemInternalMargin { get; set; }
+
+        public IImage? FolderIcon { get; set; }
+        public IImage? FolderLinkIcon { get; set; }
+        public IImage? FileIcon { get; set; }
+
         #endregion
 
         #region 子窗口设置

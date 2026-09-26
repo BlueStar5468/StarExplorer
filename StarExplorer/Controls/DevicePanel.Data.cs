@@ -51,7 +51,7 @@ namespace StarExplorer.Controls
         public int ItemMargin { get => itemMargin; set { itemMargin = value; OnPropertyChanged(nameof(ItemMargin)); } }
         public int ItemCornerRadius { get => itemCornerRadius; set { itemCornerRadius = value; OnPropertyChanged(nameof(ItemCornerRadius)); } }
         public int TextSize { get => textSize; set { textSize = value; OnPropertyChanged(nameof(TextSize)); } }
-        public int LabelFontSize { get => labelFontSize; set { labelFontSize = value; OnPropertyChanged(nameof(labelFontSize)); } }
+        public int LabelFontSize { get => labelFontSize; set { labelFontSize = value; OnPropertyChanged(nameof(LabelFontSize)); } }
         public int ItemSpacing { get => itemSpacing; set { itemSpacing = value; OnPropertyChanged(nameof(ItemSpacing)); } }
         public int ItemWidth { get => itemWidth; set { itemWidth = value; OnPropertyChanged(nameof(ItemWidth)); OnPropertyChanged(nameof(InfomationPanelWidth)); } }
         public int ItemHeight { get => itemHeight; set { itemHeight = value; OnPropertyChanged(nameof(ItemHeight)); OnPropertyChanged(nameof(InfomationPanelWidth)); } }

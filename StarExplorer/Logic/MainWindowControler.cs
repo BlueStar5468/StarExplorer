@@ -19,6 +19,7 @@ namespace StarExplorer.Logic
         //管理的窗口
         Explorer? explorer;
         ExplorerData? explorerData;
+        SubExplorerController subExplorerController;
         TabBarPanelData? tabBarPanelData;
 
         //事件
@@ -32,7 +33,7 @@ namespace StarExplorer.Logic
         }
 
 
-        public void Initialize()
+        public void Initialize(InitializeDataPack initializeDataPack)
         {
             CreateWindow();
             BindEvents();
@@ -50,7 +51,7 @@ namespace StarExplorer.Logic
             //创建Tab栏以及初始标签页
             CreateTabBar();
             int id;
-            tabManager.NewTab(CreateSubExplorer(explorerData.startLocation, settings, coreData), out id);
+            tabManager.NewTab(CreateSubExplorer(settings, coreData), out id);
             tabManager.SelectTab(id);
         }
 
@@ -95,7 +96,7 @@ namespace StarExplorer.Logic
         private void AddTab()
         {
             if (explorerData == null) throw new Exception("数据上下文尚未创建，无法添加标签页");
-            tabManager.NewTab(CreateSubExplorer(explorerData.startLocation, settings, coreData), out int _);
+            tabManager.NewTab(CreateSubExplorer(settings, coreData), out int _);
         }
 
         //封装方法
@@ -124,24 +125,9 @@ namespace StarExplorer.Logic
             }
         }
 
-        public Panel GetDefaltDisplay(StartLocation startLocation)
+        public Panel CreateSubExplorer(ISettings settings, ICoreData coreData)
         {
-            //获取标签页的初始内容
-            if (startLocation == StartLocation.Devices)
-            {
-                var panel = CreateDevicePanel();
-                return panel;
-            }
-            else
-            {
-                //TODO: 根据其他起始位置生成相应的显示内容，目前仅实现了设备显示的生成逻辑
-                return new StackPanel();
-            }
-        }
-
-        public Panel CreateSubExplorer(StartLocation startLocation, ISettings settings, ICoreData coreData)
-        {
-            SubExplorerController subExplorerController = new SubExplorerController(coreData, settings, startLocation);
+            subExplorerController = new SubExplorerController(coreData, settings);
             return subExplorerController.GetInstance();
         }
 
