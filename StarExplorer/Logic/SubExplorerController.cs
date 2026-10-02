@@ -1,14 +1,8 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Metadata;
 using StarExplorer.Controls;
 using StarExplorer.Views;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StarExplorer.Logic
 {
@@ -16,22 +10,24 @@ namespace StarExplorer.Logic
     {
         //数据
         Panel root = null!;
-        SubExplorerData data;
-        SubExplorer view;
+        SubExplorerData data = null!;
+        SubExplorer view = null!;
 
         CurrentPanelType currentPanelType;
         CurrentPanelType defaltPanelType;
         //依赖
         ICoreData coreData;
         ISettings settings;
+        IToastCanvasController toastCanvasController;
         //事件
         public Action? DisposeDevicePanel;
         public Action? DisposeItemsPanel;
 
-        public SubExplorerController(ICoreData coreData, ISettings settings)
+        public SubExplorerController(ICoreData coreData, ISettings settings, IToastCanvasController toastCanvasController)
         {
             this.coreData = coreData;
             this.settings = settings;
+            this.toastCanvasController = toastCanvasController;
 
             CreatWindow();
             BindEvent();
@@ -40,10 +36,18 @@ namespace StarExplorer.Logic
         }
 
         //事件处理方法
-        private void OpenDevice(string devicePath)
+        private void OpenDevice(string devicePath, bool isReady)
         {
             //处理设备打开事件
             Debug.WriteLine($"Device opened: {devicePath}");
+            toastCanvasController.ShowToast($"设备已打开: {devicePath}", $"设备已打开: {devicePath}");
+            //光驱等设备处理
+            if (!isReady)   //TODO:实现提示框或 toast通知管理器 在 MainWindowController中
+            { 
+                toastCanvasController.ShowToast($"设备未就绪: {devicePath}", $"请将媒体插入设备 {devicePath}");
+                return;
+            }
+
             //创建ItemsPanel
             Panel itemsPanel = CreateItemPanel(devicePath);
             currentPanelType = CurrentPanelType.ItemsPanel;

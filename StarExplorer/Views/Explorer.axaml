@@ -86,9 +86,9 @@
             </Border>
         </Grid>
 
-        <Border x:Name="SubExplorerBorder">
-            
-        </Border>
+        <Panel x:Name="SubExplorerRootPanel"> <!--子浏览器的总容器根面板-->
+
+        </Panel>
 
         <!--
         <Grid x:Name="Gird_0">

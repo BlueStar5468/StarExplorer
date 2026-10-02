@@ -144,4 +144,16 @@ namespace StarExplorer.Shared
         Unknown
     }
 
+    //double类型的Vector2结构体
+    public struct Vector2d
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public Vector2d(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
+
 }

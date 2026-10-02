@@ -178,6 +178,11 @@ namespace StarExplorer.Controls
             }
         }
 
+        internal bool GetDeviceStatus()
+        {
+            return deviceDataContent.Device.IsReady;
+        }
+
         private void StopAllAnimations()
         {
             pointerEnteredAnimationCancelTokenSource?.Cancel();
