@@ -171,6 +171,18 @@ namespace StarExplorer.Controls
             return "UnFind"; //未找到设备
         }
 
+        internal bool GetDeviceStatusById(int id)
+        {
+            foreach (var control in controls)
+            {
+                if (control.GetID() == id)
+                {
+                    return control.GetDeviceStatus();
+                }
+            }
+            return false; //设备未就绪
+        }
+
         public void Dispose()
         {
             //释放资源

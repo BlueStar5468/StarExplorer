@@ -19,7 +19,7 @@ namespace StarExplorer.Controls
         DevicePanelData panelData = null!;
         DevicesPanel panel = null!;
         //事件
-        public Action<String>? DeviceOpened; 
+        public Action<String,bool>? DeviceOpened; 
 
 
         public DevicePanelController(ISettings settings, ICoreData coreData)
@@ -94,6 +94,7 @@ namespace StarExplorer.Controls
             //处理鼠标双击设备项的事件
             String Temp = panel.GetDeviceNameById(id);
             String OpenedDeviceName;
+            //光驱等设备处理：未插入光盘但有盘符(由事件第二个bool变量表示)
             if (Temp == "Unknown")
             {
                 //TODO: 弹出提示，设备未挂载
@@ -107,7 +108,7 @@ namespace StarExplorer.Controls
             else
             {
                 OpenedDeviceName = panel.GetDeviceNameById(id);
-                this.DeviceOpened?.Invoke(OpenedDeviceName);
+                this.DeviceOpened?.Invoke(OpenedDeviceName, panel.GetDeviceStatusById(id));
             }
         }
 

@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace StarExplorer.Logic
 {
-    internal class MainWindowControler : IMainWindowControler
+    internal class MainWindowControler : IMainWindowControler , IModule
     {
         //此类是主窗口的控制器，构造此类代表创建一个主窗口
 
@@ -19,8 +19,9 @@ namespace StarExplorer.Logic
         //管理的窗口
         Explorer? explorer;
         ExplorerData? explorerData;
-        SubExplorerController subExplorerController;
+        SubExplorerController subExplorerController = null!;
         TabBarPanelData? tabBarPanelData;
+        ToastCanvasController toastCanvasController = null!;   
 
         //事件
         public event Action? AppExitRequested;
@@ -48,10 +49,14 @@ namespace StarExplorer.Logic
             explorer = new Explorer(explorerData);
             explorer.DataContext = explorerData;
 
+            //创建toast通知画布 注:不要在画布创建前调用ShowToast方法,否则会爆空引用
+            toastCanvasController = new ToastCanvasController(settings, coreData);
+            explorer.MountToSubExplorerMessageBorder(toastCanvasController.GetInstance());
+            
             //创建Tab栏以及初始标签页
             CreateTabBar();
             int id;
-            tabManager.NewTab(CreateSubExplorer(settings, coreData), out id);
+            tabManager.NewTab(CreateSubExplorer(settings, coreData, (IToastCanvasController)toastCanvasController), out id);
             tabManager.SelectTab(id);
         }
 
@@ -64,6 +69,8 @@ namespace StarExplorer.Logic
             explorer.AddButtonClicked += AddTab;
             explorer.Opened += OnWindowOpened;
             tabManager.SelectedTabChanged += OnSelectedTabChanged;
+            //测试:创建测试Toast通知
+            //toastCanvasController.ShowToast("测试通知");
         }
 
         private void RefreshDisplay()
@@ -96,7 +103,7 @@ namespace StarExplorer.Logic
         private void AddTab()
         {
             if (explorerData == null) throw new Exception("数据上下文尚未创建，无法添加标签页");
-            tabManager.NewTab(CreateSubExplorer(settings, coreData), out int _);
+            tabManager.NewTab(CreateSubExplorer(settings, coreData, (IToastCanvasController)toastCanvasController), out int _);
         }
 
         //封装方法
@@ -125,9 +132,9 @@ namespace StarExplorer.Logic
             }
         }
 
-        public Panel CreateSubExplorer(ISettings settings, ICoreData coreData)
+        public Panel CreateSubExplorer(ISettings settings, ICoreData coreData, IToastCanvasController toastCanvasController)
         {
-            subExplorerController = new SubExplorerController(coreData, settings);
+            subExplorerController = new SubExplorerController(coreData, settings, toastCanvasController);
             return subExplorerController.GetInstance();
         }
 

@@ -26,7 +26,7 @@ namespace StarExplorer.Shared
         public int GetID()
         {
             int id;
-            if (UsedIDCount < maxIDCount || maxIDCount == 0)
+            if (UsedIDCount <= maxIDCount || maxIDCount == 0)
             {
                 id = IDStack.Pop();
                 if (IDStack.Count == 0) IDStack.Push(id + 1);
@@ -44,6 +44,16 @@ namespace StarExplorer.Shared
                 usedIDCount -= 1;
             }
             else throw new InvalidOperationException("试图回收一个不合法的id");
+        }
+
+        public bool isFull()
+        {
+            if (maxIDCount != 0)
+            {
+                if (usedIDCount >= maxIDCount) return true;
+                else return false;
+            }
+            else return false;
         }
 
         private bool IsIDLegal(int id)

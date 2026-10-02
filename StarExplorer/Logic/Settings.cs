@@ -49,6 +49,16 @@ namespace StarExplorer.Logic
         int adressBoxCornerRadius = 5;
         #endregion
 
+        #region Toast通知设置
+        int maxToastCount = 5;
+        int toastDurationMS = 3000;
+        int toastSpacing = 10;
+        int toastWidth = 150;
+        int toastHeight = 75;
+        int toastCornerRadius = 5;
+        bool toastAutoHeight = false;
+        #endregion
+
         #region 全局设置
         StartLocation startLocation = StartLocation.Devices;
         private int textFontSize = 14;
@@ -69,6 +79,7 @@ namespace StarExplorer.Logic
         string devicePanelLabelTextColor = Colors.Black.ToString(); //设备显示模式下显示区标签的文字颜色
         string devicePanelTextColor = Colors.Black.ToString(); //设备显示模式下显示区的文字颜色
 
+        string toastBackGroundColor = Colors.LightGray.ToString(); //toast通知的背景色
         #endregion 图片资源
         IImage? driveImage_System; 
         IImage? driveImage_Normal;
@@ -117,6 +128,17 @@ namespace StarExplorer.Logic
         public int AdressBoxCornerRadius { get => adressBoxCornerRadius; set { adressBoxCornerRadius = value; OnPropertyChanged(nameof(AdressBoxCornerRadius)); } }
         #endregion
 
+        #region toast通知设置
+        public int MaxToastCount { get => maxToastCount; set { maxToastCount = value; OnPropertyChanged(nameof(MaxToastCount)); } }
+        public int ToastDurationMS { get => toastDurationMS; set { toastDurationMS = value; OnPropertyChanged(nameof(ToastDurationMS)); } }
+        public int ToastSpacing { get => toastSpacing; set { toastSpacing = value; OnPropertyChanged(nameof(ToastSpacing)); } }
+        public int ToastWidth { get => toastWidth; set { toastWidth = value; OnPropertyChanged(nameof(ToastWidth)); } }
+        public int ToastHeight { get => toastHeight; set { toastHeight = value; OnPropertyChanged(nameof(ToastHeight)); } }
+        public int ToastCornerRadius { get => toastCornerRadius; set { toastCornerRadius = value; OnPropertyChanged(nameof(ToastCornerRadius)); } }
+        public bool ToastAutoHeight { get => toastAutoHeight; set { toastAutoHeight = value; OnPropertyChanged(nameof(ToastAutoHeight)); } }
+
+        #endregion
+
         #region 全局设置
         public StartLocation StartLocation { get => startLocation; set { startLocation = value; OnPropertyChanged(nameof(StartLocation)); } }
         #endregion
@@ -133,6 +155,7 @@ namespace StarExplorer.Logic
         public string TabItemBackgroundColor { get => tabItemBackgroundColor; set { tabItemBackgroundColor = value; OnPropertyChanged(nameof(TabItemBackgroundColor)); OnPropertyChanged(nameof(TabItemBackgroundColor_Color)); } }
         public string DevicePanelLabelTextColor { get => devicePanelLabelTextColor; set { devicePanelLabelTextColor = value; OnPropertyChanged(nameof(DevicePanelLabelTextColor)); OnPropertyChanged(nameof(DevicePanelLabelTextColor_Color)); } }
         public string DevicePanelTextColor { get => devicePanelTextColor; set { devicePanelTextColor = value; OnPropertyChanged(nameof(DevicePanelTextColor)); OnPropertyChanged(nameof(DevicePanelTextColor_Color)); } }
+        public string ToastBackGroundColor { get => toastBackGroundColor; set { toastBackGroundColor = value; OnPropertyChanged(nameof(ToastBackGroundColor)); OnPropertyChanged(nameof(ToastBackGroundColor_Color)); } }
 
         //以下是提供转换器的颜色属性
         public Color ThemeColor_Color { get => Color.Parse(ThemeColor); }
@@ -143,6 +166,7 @@ namespace StarExplorer.Logic
         public Color TabItemBackgroundColor_Color { get => Color.Parse(TabItemBackgroundColor); }
         public Color DevicePanelLabelTextColor_Color {  get => Color.Parse(DevicePanelLabelTextColor); }
         public Color DevicePanelTextColor_Color { get => Color.Parse(DevicePanelTextColor); }
+        public Color ToastBackGroundColor_Color { get => Color.Parse(ToastBackGroundColor); }
 
 
         #endregion
@@ -234,6 +258,16 @@ namespace StarExplorer.Logic
         public int AdressBoxCornerRadius { get; set; }
         #endregion
 
+        #region Toast通知设置
+        public int MaxToastCount { get; set; }
+        public int ToastDurationMS { get; set; }
+        public int ToastSpacing { get; set; }
+        public int ToastWidth { get; set; }
+        public int ToastHeight { get; set; }
+        public int ToastCornerRadius { get; set; }
+        public bool ToastAutoHeight { get; set; }
+        #endregion
+
         #region 全局设置
         public StartLocation StartLocation { get; set; }
         public int TextFontSize { get; set; } 
@@ -249,6 +283,7 @@ namespace StarExplorer.Logic
         public string TabItemBackgroundColor { get; set; }
         public string DevicePanelLabelTextColor { get; set; }
         public string DevicePanelTextColor { get; set; }
+        public string ToastBackGroundColor { get; set; }
         //以下是提供转换器的颜色属性
         public Color ThemeColor_Color { get ; }
         public Color WindowDisplayBackgroundColor_Color { get; }
@@ -258,6 +293,7 @@ namespace StarExplorer.Logic
         public Color TabItemBackgroundColor_Color { get; }
         public Color DevicePanelLabelTextColor_Color { get; }
         public Color DevicePanelTextColor_Color { get; }
+        public Color ToastBackGroundColor_Color { get; }
 
         #endregion
 
