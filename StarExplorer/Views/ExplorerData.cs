@@ -16,7 +16,7 @@ namespace StarExplorer.Views
 
         //数据
         //依赖
-        internal ITabManager tabManager;
+        internal ITabManager tabManager = null!;
         //配置
         private string label = "StarExplorer";
         private string themeColor = Colors.AliceBlue.ToString();

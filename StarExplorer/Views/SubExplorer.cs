@@ -19,7 +19,7 @@ namespace StarExplorer.Views
         SubExplorerData dataContext;
         Panel root;
 
-        Border CurrentDisplayContent;
+        Border CurrentDisplayContent = null!;
 
         //事件
         public Action? HomeButtonCliked;

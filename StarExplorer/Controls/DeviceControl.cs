@@ -30,7 +30,7 @@ namespace StarExplorer.Controls
 
             Grid grid = new Grid();
             grid.DataContext = dataContext;
-
+            
             //用于显示设备图标的列
             ColumnDefinition icon = new ColumnDefinition();
 
