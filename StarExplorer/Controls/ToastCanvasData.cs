@@ -17,8 +17,11 @@ namespace StarExplorer.Controls
         private int toastWidth;
         private int toastHeight;
         private int toastCornerRadius;
+        private int toastTimeMS; //toast显示时间
         private bool toastAutoHeight;
         private Color toastBackgroundColor;
+        private Color toastBorderColor;
+        private Color toastLabelPanelColor;
 
         public int MaxToastCount { get => maxToastCount; set { if (maxToastCount != value) { maxToastCount = value; OnPropertyChanged(nameof(MaxToastCount)); } } }
         public int ToastDurationMS { get => toastDurationMS; set { if (toastDurationMS != value) { toastDurationMS = value; OnPropertyChanged(nameof(ToastDurationMS)); } } }
@@ -26,9 +29,11 @@ namespace StarExplorer.Controls
         public int ToastWidth { get => toastWidth; set { if (toastWidth != value) { toastWidth = value; OnPropertyChanged(nameof(ToastWidth)); } } }
         public int ToastHeight { get => toastHeight; set { if (toastHeight != value) { toastHeight = value; OnPropertyChanged(nameof(ToastHeight)); } } }
         public int ToastCornerRadius { get => toastCornerRadius; set { if (toastCornerRadius != value) { toastCornerRadius = value; OnPropertyChanged(nameof(ToastCornerRadius)); } } }
+        public int ToastTimeMS { get => toastTimeMS; set { if (toastTimeMS != value) { toastTimeMS = value; OnPropertyChanged(nameof(ToastTimeMS)); } } }
         public bool ToastAutoHeight { get => toastAutoHeight; set { if (toastAutoHeight != value) { toastAutoHeight = value; OnPropertyChanged(nameof(ToastAutoHeight)); } } }  
         public Color ToastBackgroundColor { get => toastBackgroundColor; set { if (toastBackgroundColor != value) { toastBackgroundColor = value; OnPropertyChanged(nameof(ToastBackgroundColor)); } } }
-
+        public Color ToastBorderColor { get => toastBorderColor; set { if (toastBorderColor != value) { toastBorderColor = value; OnPropertyChanged(nameof(ToastBorderColor)); } } }
+        public Color ToastLabelPanelColor { get => toastLabelPanelColor; set { if (toastLabelPanelColor != value) { toastLabelPanelColor = value; OnPropertyChanged(nameof(ToastLabelPanelColor)); } } }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -50,6 +55,9 @@ namespace StarExplorer.Controls
             ToastAutoHeight = settings.ToastAutoHeight;
             ToastCornerRadius = settings.ToastCornerRadius;
             ToastBackgroundColor = settings.ToastBackGroundColor_Color;
+            ToastBorderColor = settings.ToastBorderColor_Color;
+            ToastLabelPanelColor = settings.ToastLabelPanelColor_Color;
+            ToastTimeMS = settings.ToastTimeMS;
         }
 
         private void BindSettings(ISettings settings)
@@ -81,6 +89,15 @@ namespace StarExplorer.Controls
                         break;
                     case nameof(settings.ToastBackGroundColor_Color):
                         ToastBackgroundColor = settings.ToastBackGroundColor_Color;
+                        break;
+                    case nameof(settings.ToastBorderColor_Color):
+                        ToastBorderColor = settings.ToastBorderColor_Color;
+                        break;
+                    case nameof(settings.ToastLabelPanelColor_Color):
+                        ToastLabelPanelColor = settings.ToastLabelPanelColor_Color;
+                        break;
+                    case nameof(settings.ToastTimeMS):
+                        ToastTimeMS = settings.ToastTimeMS;
                         break;
                 }
             };

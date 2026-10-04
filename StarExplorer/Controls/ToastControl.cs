@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Media;
+using Avalonia.Threading;
 using StarExplorer.Shared;
 using System;
 using System.Threading;
@@ -14,6 +15,8 @@ namespace StarExplorer.Controls
         Panel root;
         ToastCanvasData dataContent;
 
+        //超时定时器
+        DispatcherTimer? autoCloseTimer;
         //动画
         Animation SlideIn;
         Animation SlideOut = null!;
@@ -42,9 +45,31 @@ namespace StarExplorer.Controls
                 Background = Avalonia.Media.Brushes.Transparent,
             };
 
+            //由于内容Border使用了Clip限制内容呈现区域，所以需要在外层再套一层Border来实现阴影效果
+            Border shadowBorder = new Border()
+            {
+                Name = "ShadowBorder",
+                Background = Avalonia.Media.Brushes.Transparent,
+            };
+            shadowBorder.DataContext = dataContent;
+            shadowBorder.Bind(Border.CornerRadiusProperty, new Binding(nameof(dataContent.ToastCornerRadius)) { Converter = new CornerRadiusConverter() });
+            shadowBorder.BoxShadow = new BoxShadows
+            (
+                new BoxShadow()
+                {
+                    Color = Color.FromArgb(0x60, 0, 0, 0),
+                    OffsetX = 0,
+                    OffsetY = 6,
+                    Blur = 20,
+                    Spread = 0,
+                }
+            );
+
             Border border = new Border();
+            border.Name = "ContentBorder";
+            //TODO:透明颜色待实现 使用alpha通道
             //注:这个边框向Border内部绘制
-            border.BorderBrush = Avalonia.Media.Brushes.Aqua;       //TODO:边框颜色设置待实现
+            border.Bind(Border.BorderBrushProperty, new Binding(nameof(dataContent.ToastBorderColor)) { Converter = new BrushConverter() });       //TODO:边框颜色设置待实现
             border.BorderThickness = new Avalonia.Thickness(1);     //TODO:边框厚度设置待实现
             var ClipRegion = new RectangleGeometry();   //Border剪裁区域 防止圆角溢出
             border.DataContext = dataContent;
@@ -54,6 +79,7 @@ namespace StarExplorer.Controls
             border.Bind(Border.HeightProperty, new Binding(nameof(dataContent.ToastHeight)));
             border.Bind(Border.CornerRadiusProperty, new Binding(nameof(dataContent.ToastCornerRadius)) { Converter = new CornerRadiusConverter()});
 
+
             ClipRegion.Rect = new Avalonia.Rect(0,0,border.Width,border.Height);//注:此属性对于Rect未实现绑定
             ClipRegion.Bind(RectangleGeometry.RadiusXProperty, new Binding(nameof(dataContent.ToastCornerRadius)) { Source = dataContent } );
             ClipRegion.Bind(RectangleGeometry.RadiusYProperty, new Binding(nameof(dataContent.ToastCornerRadius)) { Source = dataContent } );
@@ -61,11 +87,8 @@ namespace StarExplorer.Controls
 
             DockPanel dockPanel = new DockPanel();
 
-            Panel LabelPanel = new Panel()
-            {
-                Background = Avalonia.Media.Brushes.Aqua,
-                //TODO:颜色设置以及透明颜色待实现
-            };
+            Panel LabelPanel = new Panel();
+            LabelPanel.Bind(Panel.BackgroundProperty, new Binding(nameof(dataContent.ToastLabelPanelColor)) { Converter = new BrushConverter() });
 
             Grid LabelGrid = new Grid()
             {
@@ -133,7 +156,9 @@ namespace StarExplorer.Controls
 
             border.Child = dockPanel;
 
-            root.Children.Add(border);
+            shadowBorder.Child = border;
+
+            root.Children.Add(shadowBorder);
 
             //初始化动画
             SlideIn = Animations.GetSlideAnimation2(300, true, startPosition.X, startPosition.Y, endPosition.X, endPosition.Y);
@@ -148,6 +173,17 @@ namespace StarExplorer.Controls
                 //像Canvas发送关闭事件，通知其移除该Toast控件
                 ToastClosed?.Invoke(id);
             };
+
+            //初始化超时定时器
+            this.autoCloseTimer = new DispatcherTimer();
+            autoCloseTimer.Interval = TimeSpan.FromMilliseconds(dataContent.ToastTimeMS);
+            autoCloseTimer.Tick += async (s, e) =>
+            {
+                autoCloseTimer.Stop();
+                await SlideOutAnimation();
+                ToastClosed?.Invoke(id);
+            };
+            autoCloseTimer.Start();
         }
 
         //封装方法
