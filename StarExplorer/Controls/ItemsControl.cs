@@ -136,7 +136,14 @@ namespace StarExplorer.Controls
             StopAnimation();
             if (itemDataContext.IsSelected) return;
             this.pointerEnteredAnimationCancelTokenSource = new CancellationTokenSource();
-            this.pointerEnteredAnimation.RunAsync(root, this.pointerEnteredAnimationCancelTokenSource.Token);
+            try
+            {
+                this.pointerEnteredAnimation.RunAsync(root, this.pointerEnteredAnimationCancelTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // 动画被取消，不做处理
+            }
         }
 
         private void OnPointerExited(object? sender, PointerEventArgs e)
@@ -144,7 +151,14 @@ namespace StarExplorer.Controls
             StopAnimation();
             if (itemDataContext.IsSelected) return;
             this.pointerExitedAnimationCancelTokenSource = new CancellationTokenSource();
-            this.pointerExitedAnimation.RunAsync(root, this.pointerExitedAnimationCancelTokenSource.Token);
+            try
+            {
+                this.pointerExitedAnimation.RunAsync(root, this.pointerExitedAnimationCancelTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // 动画被取消，不做处理
+            }
         }
 
         private void OnSelectedStatusChanged(ItemsPanelData dataContext)

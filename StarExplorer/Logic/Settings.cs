@@ -24,7 +24,7 @@ namespace StarExplorer.Logic
         #endregion
 
         #region 设备显示模式的显示区设置
-        int panelMargin = 10;
+        int panelMargin = 5;
         int deviceDisplayWidth = 200;
         int deviceDisplayHeight = 50;
         int deviceSpacing = 10;
@@ -201,12 +201,12 @@ namespace StarExplorer.Logic
             //此处不能使用异步方法，否则可能会导致UI线程在设置加载完成之前就访问了设置数据，从而引发异常
 
             //以下为测试数据，在实现从文件加载设置之前请勿删除
-            driveImage_Normal = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
-            driveImage_System = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
+            driveImage_Normal = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/Disk.png")));
+            driveImage_System = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/Disk_System.png")));
         
-            folderIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
-            folderLinkIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
-            fileIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
+            folderIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/Folder.png")));
+            folderLinkIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/Folder_Junction.png")));
+            fileIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/File.png")));
         }
 
         private void OnPropertyChanged(string propertyName)

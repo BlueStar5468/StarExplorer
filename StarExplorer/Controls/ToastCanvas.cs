@@ -94,6 +94,9 @@ namespace StarExplorer.Controls
             }
             toastControls.Remove(toastToRemove);
             root.Children.Remove(toastToRemove.GetInstance());
+            //解除事件绑定
+            toastToRemove.ToastClosed -= RemoveToast;
+            toastToRemove.Dispose();
             //释放ID
             iDManager.RecycleID(id);
         }

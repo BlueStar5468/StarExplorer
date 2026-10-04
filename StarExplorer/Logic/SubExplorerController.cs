@@ -53,7 +53,7 @@ namespace StarExplorer.Logic
             Panel itemsPanel = CreateItemPanel(data.Path);
             currentPanelType = CurrentPanelType.ItemsPanel;
             view.ClearDisplayContent();
-            this.DisposeDevicePanel?.Invoke();  //触发DisposeDevicePanel事件，解除DevicePanel的事件绑定
+            this._DisposeDevicePanel();
             view.SetMainDisplayContent(itemsPanel);
         }
 
@@ -68,13 +68,13 @@ namespace StarExplorer.Logic
             if (currentPanelType == CurrentPanelType.ItemsPanel)
             {
                 view.ClearDisplayContent();
-                this.DisposeItemsPanel?.Invoke();  //触发DisposeItemsPanel事件，解除ItemsPanel的事件绑定
+                this._DisposeItemsPanel();  //触发DisposeItemsPanel事件，解除ItemsPanel的事件绑定
                 CreateStartPanel();
             }
             else if (currentPanelType == CurrentPanelType.DevicePanel)
             {
                 view.ClearDisplayContent();
-                this.DisposeDevicePanel?.Invoke();  //触发DisposeDevicePanel事件，解除DevicePanel的事件绑定
+                this._DisposeDevicePanel();  //触发DisposeDevicePanel事件，解除DevicePanel的事件绑定
                 CreateStartPanel();
             }
         }
@@ -156,6 +156,24 @@ namespace StarExplorer.Logic
             return itemsPanelController.GetInstance();
         }
 
+        private void DisposeAll()
+        {
+            //触发Dispose事件，解除所有事件绑定
+            this._DisposeDevicePanel();
+            this._DisposeItemsPanel();
+        }
+
+        private void _DisposeItemsPanel()
+        {
+            this.DisposeItemsPanel?.Invoke();
+            this.DisposeItemsPanel = null;
+        }
+
+        private void _DisposeDevicePanel()
+        {
+            this.DisposeDevicePanel?.Invoke();
+            this.DisposeDevicePanel = null;
+        }
     }
 
     internal enum CurrentPanelType

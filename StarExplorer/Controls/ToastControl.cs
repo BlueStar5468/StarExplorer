@@ -1,4 +1,5 @@
-﻿using Avalonia.Animation;
+﻿using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Media;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace StarExplorer.Controls
 {
-    internal class ToastControl
+    internal class ToastControl : IDisposable
     {
         Panel root;
         ToastCanvasData dataContent;
@@ -31,6 +32,12 @@ namespace StarExplorer.Controls
         //事件
         public Action<int>? ToastClosed;
         private Action? CloseButtonCliked;
+        private Action? Disposed;
+        //用于Dispose的委托备份
+        EventHandler<VisualTreeAttachmentEventArgs> attachedToVisualTreeHandlerBackup;
+        EventHandler<Avalonia.Interactivity.RoutedEventArgs> closeButtonClickedHandlerBackup;
+        Action private_closeButtonClikedHandlerBackup;
+        EventHandler timerTickHandlerBackup;
 
         public ToastControl(ToastCanvasData dataContent, Vector2d startPosition, Vector2d endPosition, Message message, int id)
         {
@@ -110,7 +117,6 @@ namespace StarExplorer.Controls
                 Background = Avalonia.Media.Brushes.Transparent,
                 IsHitTestVisible = true,    //注：此属性确保在通知点击穿透的同时，关闭按钮仍然可以被点击
             };
-            closeButton.Click += (s, e) => { this.CloseButtonCliked?.Invoke(); };
 
             TextBlock label = new TextBlock()
             {
@@ -165,8 +171,9 @@ namespace StarExplorer.Controls
             FadeAway = Animations.GetFadeAwayAnimation(300);
             //注:SlideOut和MoveTO动画由于目标位置取决于当前Toast位置，因此在运行时动态创建
             //事件绑定
-            root.AttachedToVisualTree += async (s, e) => { await SlideInAnimation(); };
-            this.CloseButtonCliked += async () => 
+            attachedToVisualTreeHandlerBackup = async (s, e) => { await SlideInAnimation(); };
+            closeButtonClickedHandlerBackup = (s, e) => { this.CloseButtonCliked?.Invoke(); };
+            private_closeButtonClikedHandlerBackup = async () =>
             {
                 //注:await确保动画完成后再触发事件，避免在动画过程中移除控件导致异常
                 await SlideOutAnimation();
@@ -174,16 +181,33 @@ namespace StarExplorer.Controls
                 ToastClosed?.Invoke(id);
             };
 
+            root.AttachedToVisualTree += attachedToVisualTreeHandlerBackup;
+            closeButton.Click += closeButtonClickedHandlerBackup;
+            this.CloseButtonCliked += private_closeButtonClikedHandlerBackup;
+
             //初始化超时定时器
             this.autoCloseTimer = new DispatcherTimer();
             autoCloseTimer.Interval = TimeSpan.FromMilliseconds(dataContent.ToastTimeMS);
-            autoCloseTimer.Tick += async (s, e) =>
+            timerTickHandlerBackup = async (s, e) =>
             {
                 autoCloseTimer.Stop();
                 await SlideOutAnimation();
                 ToastClosed?.Invoke(id);
             };
+            autoCloseTimer.Tick += timerTickHandlerBackup;
             autoCloseTimer.Start();
+
+            //在Dispose时解除事件绑定，避免内存泄漏
+            this.Disposed += () =>
+            {
+                autoCloseTimer.Stop();
+                autoCloseTimer.Tick -= timerTickHandlerBackup;
+                autoCloseTimer = null;
+
+                closeButton.Click -= closeButtonClickedHandlerBackup;
+                root.AttachedToVisualTree -= attachedToVisualTreeHandlerBackup;
+                this.CloseButtonCliked -= private_closeButtonClikedHandlerBackup;
+            };
         }
 
         //封装方法
@@ -206,6 +230,19 @@ namespace StarExplorer.Controls
             {
                 
             }
+        }
+
+        public void Dispose()
+        {
+            this.StopAllAnimations();
+
+            this.Disposed?.Invoke();
+            this.Disposed = null;
+            //释放资源
+            this.attachedToVisualTreeHandlerBackup = null!;
+            this.closeButtonClickedHandlerBackup = null!;
+            this.private_closeButtonClikedHandlerBackup = null!;
+            this.timerTickHandlerBackup = null!;
         }
 
         private async Task SlideInAnimation()
