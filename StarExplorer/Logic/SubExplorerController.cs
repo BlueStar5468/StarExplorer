@@ -40,16 +40,17 @@ namespace StarExplorer.Logic
         {
             //处理设备打开事件
             Debug.WriteLine($"Device opened: {devicePath}");
-            toastCanvasController.ShowToast($"设备已打开: {devicePath}", $"设备已打开: {devicePath}");
             //光驱等设备处理
-            if (!isReady)   //TODO:实现提示框或 toast通知管理器 在 MainWindowController中
+            if (!isReady)
             { 
                 toastCanvasController.ShowToast($"设备未就绪: {devicePath}", $"请将媒体插入设备 {devicePath}");
                 return;
             }
+            toastCanvasController.ShowToast($"设备已打开: {devicePath}", $"设备已打开: {devicePath}");
 
+            data.SetPath(devicePath);
             //创建ItemsPanel
-            Panel itemsPanel = CreateItemPanel(devicePath);
+            Panel itemsPanel = CreateItemPanel(data.Path);
             currentPanelType = CurrentPanelType.ItemsPanel;
             view.ClearDisplayContent();
             this.DisposeDevicePanel?.Invoke();  //触发DisposeDevicePanel事件，解除DevicePanel的事件绑定
@@ -76,6 +77,21 @@ namespace StarExplorer.Logic
                 this.DisposeDevicePanel?.Invoke();  //触发DisposeDevicePanel事件，解除DevicePanel的事件绑定
                 CreateStartPanel();
             }
+        }
+
+        private void OnMessageGenerated(string title, string message)
+        {
+            //处理消息生成事件
+            toastCanvasController.ShowToast(title, message);
+        }
+
+        //来自ItemsPanel的路径变更事件
+        private void OnPathChanged(string newPath)
+        {
+            //处理路径变更事件
+            Debug.WriteLine($"Core Path changed to: {newPath}");
+            data.SetPath(newPath);
+            //刷新ItemsPanel由对应的ItemsPanelController处理
         }
 
         //封装方法
@@ -105,6 +121,8 @@ namespace StarExplorer.Logic
                 defaltPanelType = CurrentPanelType.DevicePanel;
                 Panel devicePanel = CreateDevicePanel();
                 view.SetMainDisplayContent(devicePanel);
+
+                this.data.SetPath("/");
             }
             else
             {
@@ -129,9 +147,11 @@ namespace StarExplorer.Logic
             ItemsPanelController itemsPanelController = new ItemsPanelController(settings, coreData);
             itemsPanelController.SetPathAndRefresh(path);
             //事件绑定
-
+            itemsPanelController.PathChanged += OnPathChanged;
+            itemsPanelController.MessageGenerated += OnMessageGenerated;
             //Dispose事件绑定
-            this.DisposeItemsPanel += () => { };
+            this.DisposeItemsPanel += () => { itemsPanelController.PathChanged -= OnPathChanged; };
+            this.DisposeItemsPanel += () => { itemsPanelController.MessageGenerated -= OnMessageGenerated; };
 
             return itemsPanelController.GetInstance();
         }

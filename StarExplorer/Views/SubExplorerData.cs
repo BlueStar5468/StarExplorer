@@ -14,11 +14,15 @@ namespace StarExplorer.Views
         public event PropertyChangedEventHandler? PropertyChanged;
         //依赖项
         internal ISettings settings;
+
+        //当前子资源管理器的路径 仅由子资源管理器维护 修改请求全部集中于此
+        string path = null!;    
         //数据
         int sideBarWidth;
         int adressBoxHeight;
         int adressBoxCornerRadius;
         Color themeColor;
+
 
         public SubExplorerData(ISettings settings) 
         {
@@ -32,6 +36,7 @@ namespace StarExplorer.Views
         public int SideBarWidth { get => sideBarWidth; set { if (sideBarWidth != value) { sideBarWidth = value; OnPropertyChanged(nameof(SideBarWidth)); } } }
         public int AdressBoxHeight { get => adressBoxHeight; set { if (adressBoxHeight != value) { adressBoxHeight = value; OnPropertyChanged(nameof(AdressBoxHeight)); } } }
         public int AdressBoxCornerRadius { get => adressBoxCornerRadius; set { if (adressBoxCornerRadius != value) { adressBoxCornerRadius = value; OnPropertyChanged(nameof(AdressBoxCornerRadius)); } } }
+        public string Path { get => path; }
         public Color ThemeColor { get => themeColor; set { if (themeColor != value) { themeColor = value; OnPropertyChanged(nameof(ThemeColor)); } } }
         
 
@@ -65,6 +70,12 @@ namespace StarExplorer.Views
                         break;
                 }
             };
+        }
+
+        internal void SetPath(string path)
+        {
+            this.path = path;
+            OnPropertyChanged(nameof(Path));
         }
 
         private void OnPropertyChanged(string propertyName)

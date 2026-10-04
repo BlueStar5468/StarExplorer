@@ -80,7 +80,8 @@ namespace StarExplorer.Views
                 TextBox adressBox = new TextBox();
                 adressBox.Bind(TextBox.CornerRadiusProperty, new Binding(nameof(dataContext.AdressBoxCornerRadius)) { Source = dataContext , Converter = new CornerRadiusConverter()});
                 adressBox.Margin = new Avalonia.Thickness(10, 0, 10, 0);
-                //TODO:绑定地址内容至核心
+                //此处绑定使用单向 因为输入需要验证路径的合法性
+                adressBox.Bind(TextBox.TextProperty, new Binding(nameof(dataContext.Path)) { Source = dataContext, Mode = BindingMode.OneWay });
 
                 Grid.SetColumn(adressBox, 1);
                 Grid.SetColumn(homeButton, 0);
