@@ -136,7 +136,12 @@ namespace StarExplorer.Logic
             //事件绑定
             devicePanelController.DeviceOpened += OpenDevice;
             //Dispose事件绑定
-            this.DisposeDevicePanel += () => { devicePanelController.DeviceOpened -= OpenDevice; };
+            this.DisposeDevicePanel += () => {
+                devicePanelController.DeviceOpened -= OpenDevice;
+                devicePanelController.Dispose();
+                //所有devicePanel已经Dispose，解除绑定
+                this.DisposeDevicePanel = null;
+            };
 
             return devicePanelController.GetInstance();
         }
@@ -150,8 +155,11 @@ namespace StarExplorer.Logic
             itemsPanelController.PathChanged += OnPathChanged;
             itemsPanelController.MessageGenerated += OnMessageGenerated;
             //Dispose事件绑定
-            this.DisposeItemsPanel += () => { itemsPanelController.PathChanged -= OnPathChanged; };
-            this.DisposeItemsPanel += () => { itemsPanelController.MessageGenerated -= OnMessageGenerated; };
+            this.DisposeItemsPanel += () =>
+            {
+                itemsPanelController.PathChanged -= OnPathChanged;
+                itemsPanelController.MessageGenerated -= OnMessageGenerated;
+            };
 
             return itemsPanelController.GetInstance();
         }

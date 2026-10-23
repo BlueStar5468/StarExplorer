@@ -13,8 +13,15 @@ using System.Threading.Tasks;
 
 namespace StarExplorer.Controls
 {
-    internal class DevicePanelData : INotifyPropertyChanged
+    internal class DevicePanelData : INotifyPropertyChanged , IDisposable
     {
+        //内部委托
+        PropertyChangedEventHandler? settingsUpdateHandler;
+        PropertyChangedEventHandler? coreDataUpdateHandler;
+        //依赖项
+        ISettings settings;
+        ICoreData coreData;
+        //以下为数据
         IDManager manager = new IDManager(0);
 
         private string? localized_LocalLabel;
@@ -64,6 +71,9 @@ namespace StarExplorer.Controls
 
         public DevicePanelData(ISettings settings, ICoreData coreData)
         {
+            this.settings = settings;
+            this.coreData = coreData;
+
             InitSettings(settings, coreData);
             BindSettings(settings, coreData);
         }
@@ -94,7 +104,7 @@ namespace StarExplorer.Controls
 
         private void BindSettings(ISettings settings, ICoreData coreData)
         {
-            settings.PropertyChanged += (s, e) =>
+            this.settingsUpdateHandler = (s, e) =>
             {
                 switch (e.PropertyName)
                 {
@@ -147,7 +157,7 @@ namespace StarExplorer.Controls
                 }
             };
 
-            coreData.PropertyChanged += (s, e) =>
+            this.coreDataUpdateHandler= (s, e) =>
             {
                 switch (e.PropertyName)
                 {
@@ -156,6 +166,9 @@ namespace StarExplorer.Controls
                         break;
                 }
             };
+
+            settings.PropertyChanged += settingsUpdateHandler;
+            coreData.PropertyChanged += coreDataUpdateHandler;
         }
 
         private void SyncDevice(ICoreData coreData)
@@ -174,6 +187,12 @@ namespace StarExplorer.Controls
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             });
+        }
+
+        public void Dispose()
+        {
+            settings.PropertyChanged -= settingsUpdateHandler;
+            coreData.PropertyChanged -= coreDataUpdateHandler;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -195,7 +214,6 @@ namespace StarExplorer.Controls
         public int ID { get => id; }
         public LogicDevices Device { get => device; }
         public bool IsSelected { get => isSelected; set { isSelected = value; OnPropertyChanged(nameof(IsSelected)); } }
-        public Color CurrentBackgroundColor { get => currentBackgroundColor; set { currentBackgroundColor = value; OnPropertyChanged(nameof(CurrentBackgroundColor)); } }
 
         public DeviceDataContent(LogicDevices device, DevicePanelData data, int id)
         {
@@ -219,7 +237,6 @@ namespace StarExplorer.Controls
         int ID { get; }
         LogicDevices Device { get; }
         bool IsSelected { get; set; }
-        Color CurrentBackgroundColor { get; set; }
     }
 
 }

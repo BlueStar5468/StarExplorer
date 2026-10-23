@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace StarExplorer.Controls
 {
-    internal class DevicePanelController
+    internal class DevicePanelController : IDisposable
     {
         //依赖
         ISettings settings;
@@ -74,13 +74,11 @@ namespace StarExplorer.Controls
             {
                 //选中设备
                 deviceDataContent.IsSelected = true;
-                deviceDataContent.CurrentBackgroundColor = panelData.SelectedColor;
             }
             else
             {
                 //取消选中设备
                 deviceDataContent.IsSelected = false;
-                deviceDataContent.CurrentBackgroundColor = panelData.DeviceItemColor;
             }
         }
 
@@ -119,6 +117,19 @@ namespace StarExplorer.Controls
             {
                 SelectDevice(deviceDataContent, false);
             }
+        }
+
+        public void Dispose()
+        {
+            //释放面板
+            panel.Dispose();
+            //释放自身
+            panel.ControlLeftClicked -= OnControlLeftClicked;
+            panel.ControlRightClicked -= OnControlRightClicked;
+            panel.ControlDoubleTapped -= OnControlDoubleTapped;
+            panel.BackgroundPanelClicked -= OnBackgroundPanelClicked;
+            //释放数据
+            panelData.Dispose();
         }
     }
 }

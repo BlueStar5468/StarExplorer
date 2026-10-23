@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Animation;
 using System.Threading;
 using Avalonia.Data;
+using System.ComponentModel;
 
 namespace StarExplorer.Controls
 {
@@ -11,11 +12,22 @@ namespace StarExplorer.Controls
     {
         Border deviceBorder;
 
-        Animation pointerEnteredAnimation;
-        Animation pointerExitedAnimation;
+        Animation? pointerEnteredAnimation;
+        Animation? pointerExitedAnimation;
         CancellationTokenSource? pointerEnteredAnimationCancelTokenSource;
         CancellationTokenSource? pointerExitedAnimationCancelTokenSource;
 
+        //事件
+        public event Action<int>? doubleTapped;
+        public event Action<int>? leftClicked;
+        public event Action<int>? rightClicked;
+
+        //内部委托
+        PropertyChangedEventHandler? selectStatusUpdated;
+        EventHandler<Avalonia.Input.PointerEventArgs>? pointerEnteredHandler;
+        EventHandler<Avalonia.Input.PointerEventArgs>? pointerExitedHandler;
+        EventHandler<Avalonia.Input.TappedEventArgs>? doubleTappedHandler;
+        EventHandler<Avalonia.Input.PointerPressedEventArgs>? pointerPressedHandler;
         IDeviceDataContent deviceDataContent;
         public DeviceControl(DevicePanelData dataContext, IDeviceDataContent deviceDataContent)
         {
@@ -26,7 +38,7 @@ namespace StarExplorer.Controls
             deviceBorder.Bind(Border.WidthProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemWidth)));
             deviceBorder.Bind(Border.HeightProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemHeight)));
             deviceBorder.Bind(Border.CornerRadiusProperty, new Avalonia.Data.Binding(nameof(dataContext.ItemCornerRadius)) { Converter = new CornerRadiusConverter() });
-            deviceBorder.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding("CurrentBackgroundColor") { Source = deviceDataContent ,Converter = new BrushConverter() });
+            deviceBorder.Bind(Border.BackgroundProperty, new Avalonia.Data.Binding(nameof(dataContext.DeviceItemColor)) { Source = dataContext ,Converter = new BrushConverter() });
 
             Grid grid = new Grid();
             grid.DataContext = dataContext;
@@ -85,16 +97,30 @@ namespace StarExplorer.Controls
             deviceBorder.Child = grid;
 
             //创建动画
-            pointerEnteredAnimation = Animations.GetGradientAnimation(200, dataContext.DeviceItemColor, dataContext.HoverColor);
-            pointerExitedAnimation = Animations.GetGradientAnimation(200, dataContext.HoverColor, dataContext.DeviceItemColor);
+            CreateAnimation(dataContext);
 
             //事件处理
-            deviceBorder.PointerEntered += async (s, e) =>
+            InitHandler(dataContext);
+
+            deviceBorder.PointerEntered += pointerEnteredHandler; 
+            deviceBorder.PointerExited += pointerExitedHandler;
+            deviceBorder.DoubleTapped += this.doubleTappedHandler;
+            deviceBorder.PointerPressed += this.pointerPressedHandler;
+            deviceDataContent.PropertyChanged += this.selectStatusUpdated;
+        }
+
+        private void InitHandler(DevicePanelData dataContext)
+        {
+            //此方法用于初始化事件处理器，所有事件处理器均动态获取数据 无需后期绑定
+            //此函数不应该在构造函数外调用
+            //注意:Handler没有静态分析支持 请确保调用前指向Handler不为null
+            this.pointerEnteredHandler = async (s, e) =>
             {
                 if (deviceDataContent.IsSelected == true) return;
+                if (pointerEnteredAnimation == null) return;
                 //取消鼠标离开动画（如果正在运行）
                 pointerExitedAnimationCancelTokenSource?.Cancel();
-                pointerEnteredAnimationCancelTokenSource?.Dispose();
+                pointerExitedAnimationCancelTokenSource?.Dispose();
                 pointerExitedAnimationCancelTokenSource = null;
                 //启动新动画
                 pointerEnteredAnimationCancelTokenSource?.Cancel();
@@ -110,9 +136,11 @@ namespace StarExplorer.Controls
                 }
                 e.Handled = true;
             };
-            deviceBorder.PointerExited += async (s, e) =>
+
+            this.pointerExitedHandler = async (s, e) =>
             {
                 if (deviceDataContent.IsSelected == true) return;
+                if (pointerExitedAnimation == null) return;
                 //取消鼠标进入动画（如果正在运行）
                 pointerEnteredAnimationCancelTokenSource?.Cancel();
                 pointerEnteredAnimationCancelTokenSource?.Dispose();
@@ -132,12 +160,12 @@ namespace StarExplorer.Controls
                 e.Handled = true;
             };
 
-            deviceBorder.DoubleTapped += (s, e) =>
+            this.doubleTappedHandler = (s, e) =>
             {
                 doubleTapped?.Invoke(deviceDataContent.ID);
             };
 
-            deviceBorder.PointerPressed += (s, e) =>
+            this.pointerPressedHandler = (s, e) =>
             {
                 StopAllAnimations();
                 if (e.GetCurrentPoint(deviceBorder).Properties.IsLeftButtonPressed)
@@ -149,12 +177,25 @@ namespace StarExplorer.Controls
                     rightClicked?.Invoke(deviceDataContent.ID);
                 }
             };
+
+            this.selectStatusUpdated = (s, e) =>
+            {
+                if (deviceDataContent.IsSelected)
+                {
+                    deviceBorder.Background = new SolidColorBrush(dataContext.SelectedColor);
+                }
+                else
+                {
+                    deviceBorder.Background = new SolidColorBrush(dataContext.DeviceItemColor);
+                }
+            };
         }
 
-
-        public event Action<int>? doubleTapped;
-        public event Action<int>? leftClicked;
-        public event Action<int>? rightClicked;
+        private void CreateAnimation(DevicePanelData dataContext)
+        {
+            pointerEnteredAnimation = Animations.GetGradientAnimation(200, dataContext.DeviceItemColor, dataContext.HoverColor);
+            pointerExitedAnimation = Animations.GetGradientAnimation(200, dataContext.HoverColor, dataContext.DeviceItemColor);
+        }
 
         public Border GetInstance()
         {
@@ -203,6 +244,16 @@ namespace StarExplorer.Controls
             //解除引用
             pointerEnteredAnimationCancelTokenSource = null;
             pointerExitedAnimationCancelTokenSource = null;
+            //内部委托解除引用
+            deviceBorder.PointerEntered -= pointerEnteredHandler;
+            deviceBorder.PointerExited -= pointerExitedHandler;
+            deviceBorder.DoubleTapped -= this.doubleTappedHandler;
+            deviceBorder.PointerPressed -= this.pointerPressedHandler;
+            deviceDataContent.PropertyChanged -= this.selectStatusUpdated;
+            //事件释放
+            doubleTapped = null;
+            leftClicked = null;
+            rightClicked = null;
         }
     }
 }

@@ -22,6 +22,13 @@ namespace StarExplorer.Controls
         Panel scrollViewerPanel;
         //各子Control的存储
         List<DeviceControl> controls = new List<DeviceControl>();
+        //事件
+        public event Action<int>? ControlDoubleTapped;
+        public event Action<int>? ControlLeftClicked;
+        public event Action<int>? ControlRightClicked;
+        public event Action? BackgroundPanelClicked;
+        //内部委托
+        EventHandler<Avalonia.Input.PointerPressedEventArgs>? pointerPressedHandler;
 
         public DevicesPanel(DevicePanelData dataContext)
         {
@@ -133,19 +140,25 @@ namespace StarExplorer.Controls
                 scrollViewer.Content = root;
                 scrollViewerPanel.Children.Add(scrollViewer);
 
-                //在此处绑定背景面板点击事件
                 root.Background = new SolidColorBrush(Colors.Transparent); //确保背景可点击
-                root.PointerPressed += (s, e) => { if (e.Properties.IsLeftButtonPressed && ReferenceEquals(e.Source, root)) BackgroundPanelClicked?.Invoke(); };
-                //资源回收
-                scrollViewerPanel.Unloaded += (s, e) => { Dispose(); };
+
+                //事件处理
+                InitHandler();
+
+                root.PointerPressed += pointerPressedHandler;
             }
         }
 
-        public event Action<int>? ControlDoubleTapped;
-        public event Action<int>? ControlLeftClicked;
-        public event Action<int>? ControlRightClicked;
-        public event Action? BackgroundPanelClicked;
-
+        private void InitHandler()
+        {
+            pointerPressedHandler = (s, e) =>
+            {
+                if (e.Properties.IsLeftButtonPressed && ReferenceEquals(e.Source, root))
+                {
+                    BackgroundPanelClicked?.Invoke();
+                }
+            };
+        }
 
         public Panel GetInstance()
         {
@@ -185,12 +198,14 @@ namespace StarExplorer.Controls
 
         public void Dispose()
         {
-            //释放资源
+            //不要忘记释放 DeviceControl 的资源
             foreach (var control in controls)
             {
                 control.Dispose();
-                //Debug.WriteLine($"DeviceControl disposed: {control.GetInstance().DataContext}");
             }
+            //本体Dispose
+            root.PointerPressed -= pointerPressedHandler;
+            controls.Clear();
         }
     }
 }
