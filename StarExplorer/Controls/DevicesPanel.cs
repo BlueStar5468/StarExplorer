@@ -20,18 +20,23 @@ namespace StarExplorer.Controls
         StackPanel root;
         ScrollViewer scrollViewer;
         Panel scrollViewerPanel;
-        //各子Control的存储
-        List<DeviceControl> controls = new List<DeviceControl>();
+        DevicePanelData data;
+
+        //已不再维护所有Control引用，避免与Context不同步
+
         //事件
         public event Action<int>? ControlDoubleTapped;
         public event Action<int>? ControlLeftClicked;
         public event Action<int>? ControlRightClicked;
         public event Action? BackgroundPanelClicked;
+        public event Action? PanelDisposed;
         //内部委托
         EventHandler<Avalonia.Input.PointerPressedEventArgs>? pointerPressedHandler;
 
         public DevicesPanel(DevicePanelData dataContext)
         {
+            this.data = dataContext;
+
             scrollViewerPanel = new Panel()
             {
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
@@ -125,8 +130,9 @@ namespace StarExplorer.Controls
                         deviceControl.leftClicked += (id) => ControlLeftClicked?.Invoke(id);
                         deviceControl.rightClicked += (id) => ControlRightClicked?.Invoke(id);
                         //diviceControl的数据绑定会在其本身进行
-
-                        this.controls.Add(deviceControl);
+                        //用于释放资源的事件绑定
+                        this.PanelDisposed += deviceControl.Dispose;
+                        
                         return deviceControl.GetInstance();
                     }, supportsRecycling: true)
                 };
@@ -167,13 +173,13 @@ namespace StarExplorer.Controls
 
         internal String GetDeviceNameById(int id)
         {
-            foreach (var control in controls)
+            foreach (var control in data.DevicesContent)
             {
-                if (control.GetID() == id)
+                if (control.ID == id)
                 {
-                    if (control.GetDeviceName() != null)
+                    if (control.Device.Name != null)
                     {
-                        return control.GetDeviceName();
+                        return control.Device.Name;
                     }
                     else
                     {
@@ -186,11 +192,11 @@ namespace StarExplorer.Controls
 
         internal bool GetDeviceStatusById(int id)
         {
-            foreach (var control in controls)
+            foreach (var control in data.DevicesContent)
             {
-                if (control.GetID() == id)
+                if (control.ID == id)
                 {
-                    return control.GetDeviceStatus();
+                    return control.Device.IsReady;
                 }
             }
             return false; //设备未就绪
@@ -199,13 +205,10 @@ namespace StarExplorer.Controls
         public void Dispose()
         {
             //不要忘记释放 DeviceControl 的资源
-            foreach (var control in controls)
-            {
-                control.Dispose();
-            }
+            this.PanelDisposed?.Invoke();
             //本体Dispose
             root.PointerPressed -= pointerPressedHandler;
-            controls.Clear();
+            this.PanelDisposed = null;
         }
     }
 }
