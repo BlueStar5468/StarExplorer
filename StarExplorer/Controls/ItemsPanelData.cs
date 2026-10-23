@@ -12,11 +12,14 @@ using System.Threading.Tasks;
 
 namespace StarExplorer.Controls
 {
-    internal class ItemsPanelData : INotifyPropertyChanged
+    internal class ItemsPanelData : INotifyPropertyChanged, IDisposable
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         //依赖项
         IDManager idManager;
+        ISettings settings;
+        //本地委托
+        PropertyChangedEventHandler? settingsChangedHandler;
         //数据
         int fileItemHeight;
         int fileItemSpacing;
@@ -55,6 +58,7 @@ namespace StarExplorer.Controls
         public ItemsPanelData(ISettings settings)
         {
             idManager = new IDManager(0);
+            this.settings = settings;
 
             InitSettings(settings);
             BindSettings(settings);
@@ -77,7 +81,7 @@ namespace StarExplorer.Controls
         }
         private void BindSettings(ISettings settings)
         {
-            settings.PropertyChanged += (s, e) =>
+            this.settingsChangedHandler = (s, e) =>
             {
                 switch (e.PropertyName)
                 {
@@ -113,6 +117,7 @@ namespace StarExplorer.Controls
                         break;
                 }
             };
+            settings.PropertyChanged += settingsChangedHandler;
         }
 
         //封装方法
@@ -137,6 +142,12 @@ namespace StarExplorer.Controls
             }
             this.OnPropertyChanged(nameof(Items));
             this.OnPropertyChanged(nameof(ItemsDataContexts));
+        }
+
+        public void Dispose()
+        {
+            //释放本地委托
+            settings.PropertyChanged -= settingsChangedHandler;
         }
     }
 

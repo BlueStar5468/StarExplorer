@@ -14,15 +14,21 @@ using System.Threading.Tasks;
 
 namespace StarExplorer.Controls
 {
-    internal class ItemsPanel
+    internal class ItemsPanel : IDisposable
     {
         //管理数据
         Panel root;
         ItemsPanelData data;
         //所有的Item实例 注：不再维护所有Control引用 容易造成与Context不同步
         //List<FolderItemsControl> folderItemsControls = new List<FolderItemsControl>();
+        
         //事件
         public event Action<string>? PathChanged; //当用户双击文件夹时触发,传递目标路径
+        public event Action? PanelDisposed; //当ItemsPanel被销毁时触发 
+        
+        //本地委托
+        PropertyChangedEventHandler? ItemsChangedHandler;
+
         public ItemsPanel(ItemsPanelData dataContext)
         {
             root = new Panel();
@@ -92,13 +98,25 @@ namespace StarExplorer.Controls
                     folderItemsControl.DoubleClicked += OnItemDoubleClicked;
                     folderItemsControl.LeftClicked += OnItemLeftClicked;
 
+                    this.PanelDisposed += folderItemsControl.Dispose;
+                    EventHandler<Avalonia.Interactivity.RoutedEventArgs> unloadedHandler = null!;
+                    unloadedHandler = (s, e) =>
+                    {   //Items会动态刷新 必须处理好事件解绑,否则会造成内存泄漏
+                        folderItemsControl.DoubleClicked -= OnItemDoubleClicked;
+                        folderItemsControl.LeftClicked -= OnItemLeftClicked;
+                        this.PanelDisposed -= folderItemsControl.Dispose;
+                        folderItemsControl.GetInstance().Unloaded -= unloadedHandler;
+                        folderItemsControl.Dispose();
+                    };
+                    folderItemsControl.GetInstance().Unloaded += unloadedHandler;
+
                     return folderItemsControl.GetInstance();
                 }, false)
                 //此处false不复用是必要的,防止切换目录后,ItemsControl的ItemTemplate复用旧的FolderItemsControl,导致显示错误 
             };
             ItemsControl.ItemsSource = dataContext.ItemsDataContexts;
             //绑定items变化
-            dataContext.PropertyChanged += (s, e) =>
+            this.ItemsChangedHandler = (s, e) =>
             {
                 if (e.PropertyName == nameof(dataContext.ItemsDataContexts))
                 {
@@ -106,6 +124,7 @@ namespace StarExplorer.Controls
                     ItemsControl.ItemsSource = dataContext.ItemsDataContexts;
                 }
             };
+            dataContext.PropertyChanged += this.ItemsChangedHandler;
 
             scrollViewer.Content = ItemsControl;
 
@@ -164,6 +183,18 @@ namespace StarExplorer.Controls
             {
                 dataContext.IsSelected = false;
             }
+        }
+
+        public void Dispose()
+        {
+            //清理子控件
+            this.PanelDisposed?.Invoke();
+            this.data.Dispose();
+            //释放本地事件
+            this.PanelDisposed = null;
+            this.PathChanged = null;
+            //释放委托绑定
+            data.PropertyChanged -= this.ItemsChangedHandler;
         }
     }
 }

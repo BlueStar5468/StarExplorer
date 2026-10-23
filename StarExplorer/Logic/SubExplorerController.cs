@@ -61,6 +61,7 @@ namespace StarExplorer.Logic
         {
             //处理Home按钮点击事件
             Debug.WriteLine("Home button clicked");
+            GC.Collect();
 
             if (currentPanelType == defaltPanelType)
                 return; //如果当前面板类型已经是默认面板类型，则不需要返回到起始面板
@@ -159,6 +160,7 @@ namespace StarExplorer.Logic
             {
                 itemsPanelController.PathChanged -= OnPathChanged;
                 itemsPanelController.MessageGenerated -= OnMessageGenerated;
+                itemsPanelController.Dispose();
             };
 
             return itemsPanelController.GetInstance();

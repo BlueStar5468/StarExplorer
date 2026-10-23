@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace StarExplorer.Controls
 {
-    internal class ItemsPanelController
+    internal class ItemsPanelController : IDisposable
     {
         //依赖
         ISettings settings;
@@ -101,6 +101,17 @@ namespace StarExplorer.Controls
         public Panel GetInstance()
         {
             return panel.GetInstance();
+        }
+
+        public void Dispose()
+        {
+            //清理子控件
+            panel.Dispose();
+            //panel的data已经在panel.Dispose()中释放 不要双重释放
+
+            //清理事件
+            this.PathChanged = null;
+            this.MessageGenerated = null;
         }
     }
 }

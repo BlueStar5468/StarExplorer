@@ -5,11 +5,12 @@ using Avalonia.Input;
 using Avalonia.Media;
 using StarExplorer.Shared;
 using System;
+using System.ComponentModel;
 using System.Threading;
 
 namespace StarExplorer.Controls
 {
-    internal class FolderItemsControl
+    internal class FolderItemsControl : IDisposable
     {
         Panel root;
         //数据
@@ -23,8 +24,12 @@ namespace StarExplorer.Controls
         public Action<int>? LeftClicked;
         public Action<int>? RightClicked;
         public Action<int>? DoubleClicked;
-
-
+        //本地委托
+        EventHandler<Avalonia.Input.PointerEventArgs>? pointerEnteredHandler;
+        EventHandler<Avalonia.Input.PointerEventArgs>? pointerExitedHandler; 
+        EventHandler<Avalonia.Input.PointerPressedEventArgs>? pointerPressedHandler;
+        EventHandler<Avalonia.Input.TappedEventArgs>? doubleTappedHandler;
+        PropertyChangedEventHandler? dataContextChangedHandler;
 
         public FolderItemsControl(ItemsPanelData dataContext,IItemsDataContext itemDataContext)
         {
@@ -92,9 +97,50 @@ namespace StarExplorer.Controls
             this.pointerExitedAnimation = Animations.GetGradientAnimation(50, dataContext.HoverColor, Colors.LightGray);
 
             //事件绑定
-            this.root.PointerEntered += OnPointerEntered;
-            this.root.PointerExited += OnPointerExited;
-            this.root.PointerPressed += (s, e) =>
+            InitHandler(dataContext);
+
+            this.root.PointerEntered += this.pointerEnteredHandler;
+            this.root.PointerExited += this.pointerExitedHandler;
+            this.root.PointerPressed += this.pointerPressedHandler;
+            this.root.DoubleTapped += this.doubleTappedHandler;
+            //外部修改IsSelected时自动变颜色
+            itemDataContext.PropertyChanged += this.dataContextChangedHandler;
+        }
+
+        //封装方法
+        private void InitHandler(ItemsPanelData dataContext)
+        {
+            this.pointerEnteredHandler = (s, e) =>
+            {
+                StopAnimation();
+                if (itemDataContext.IsSelected) return;
+                this.pointerEnteredAnimationCancelTokenSource = new CancellationTokenSource();
+                try
+                {
+                    this.pointerEnteredAnimation.RunAsync(root, this.pointerEnteredAnimationCancelTokenSource.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // 动画被取消，不做处理
+                }
+            };
+
+            this.pointerExitedHandler = (s, e) =>
+            {
+                StopAnimation();
+                if (itemDataContext.IsSelected) return;
+                this.pointerExitedAnimationCancelTokenSource = new CancellationTokenSource();
+                try
+                {
+                    this.pointerExitedAnimation.RunAsync(root, this.pointerExitedAnimationCancelTokenSource.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // 动画被取消，不做处理
+                }
+            };
+
+            this.pointerPressedHandler = (s, e) =>
             {
                 if (e.GetCurrentPoint(root).Properties.IsLeftButtonPressed)
                 {
@@ -105,21 +151,21 @@ namespace StarExplorer.Controls
                     RightClicked?.Invoke(itemDataContext.ID);
                 }
             };
-            this.root.DoubleTapped += (s, e) =>
-            {
-                DoubleClicked?.Invoke(itemDataContext.ID);
-            };
-            //外部修改IsSelected时自动变颜色
-            itemDataContext.PropertyChanged += (s, e) =>
+
+            this.dataContextChangedHandler = (s, e) =>
             {
                 if (e.PropertyName == nameof(itemDataContext.IsSelected))
                 {
                     OnSelectedStatusChanged(dataContext);
                 }
             };
+
+            this.doubleTappedHandler = (s, e) =>
+            {
+                DoubleClicked?.Invoke(itemDataContext.ID);
+            };
         }
 
-        //封装方法
         private void StopAnimation()
         {
             this.pointerExitedAnimationCancelTokenSource?.Cancel();
@@ -129,36 +175,6 @@ namespace StarExplorer.Controls
             this.pointerEnteredAnimationCancelTokenSource?.Cancel();
             this.pointerEnteredAnimationCancelTokenSource?.Dispose();
             this.pointerEnteredAnimationCancelTokenSource = null;
-        }
-
-        private void OnPointerEntered(object? sender, PointerEventArgs e)
-        {
-            StopAnimation();
-            if (itemDataContext.IsSelected) return;
-            this.pointerEnteredAnimationCancelTokenSource = new CancellationTokenSource();
-            try
-            {
-                this.pointerEnteredAnimation.RunAsync(root, this.pointerEnteredAnimationCancelTokenSource.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                // 动画被取消，不做处理
-            }
-        }
-
-        private void OnPointerExited(object? sender, PointerEventArgs e)
-        {
-            StopAnimation();
-            if (itemDataContext.IsSelected) return;
-            this.pointerExitedAnimationCancelTokenSource = new CancellationTokenSource();
-            try
-            {
-                this.pointerExitedAnimation.RunAsync(root, this.pointerExitedAnimationCancelTokenSource.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                // 动画被取消，不做处理
-            }
         }
 
         private void OnSelectedStatusChanged(ItemsPanelData dataContext)
@@ -184,5 +200,20 @@ namespace StarExplorer.Controls
             return root;
         }
 
+        public void Dispose()
+        {
+            //清理动画
+            StopAnimation();
+            //清空本地事件
+            this.LeftClicked = null;
+            this.RightClicked = null;
+            this.DoubleClicked = null;
+            //解除委托绑定
+            this.root.PointerEntered -= this.pointerEnteredHandler;
+            this.root.PointerExited -= this.pointerExitedHandler;
+            this.root.PointerPressed -= this.pointerPressedHandler;
+            this.root.DoubleTapped -= this.doubleTappedHandler;
+            this.itemDataContext.PropertyChanged -= this.dataContextChangedHandler;
+        }
     }
 }
