@@ -70,7 +70,7 @@ namespace StarExplorer.Controls
                 }
                 if (isItemFounded == false)
                 {
-                    TabDisplayContent newDisplayContent = new TabDisplayContent
+                    TabDisplayContent newDisplayContent = new TabDisplayContent()
                     {
                         Index = item.Index,
                         Content = item.Content,
@@ -189,6 +189,14 @@ namespace StarExplorer.Controls
         private IImage icon = null!;
         private string label = string.Empty;
         private bool isSelected;
+        private Action disposeHandler = null!;
+
+        public Action DisposeHandler { get => disposeHandler; }
+
+        public TabDisplayContent(Action DisposeHandler) 
+        {
+            this.disposeHandler = DisposeHandler;
+        }
 
         public int Index { get => index; set { index = value; OnPropertyChanged(nameof(Index)); } }
         public Panel Content { get => content; set { content = value; OnPropertyChanged(nameof(Index)); }  }
@@ -207,8 +215,11 @@ namespace StarExplorer.Controls
         }
     }
 
-    internal interface ITabDisplayContent : ITabContent
+    internal interface ITabDisplayContent
     {
+        public int Index { get; set; }
+        public Panel Content { get; set; }
+        public Action DisposeHandler { get; }
         public Color CurrentBackgroundColor { get; set; }
         public IImage Icon { get; set; }
         public string Label { get; set; }
