@@ -13,7 +13,7 @@ using System.Xml.Serialization;
 
 namespace StarExplorer.Views
 {
-    internal class SubExplorer
+    internal class SubExplorer : IDisposable
     {
         //数据
         SubExplorerData dataContext;
@@ -126,6 +126,12 @@ namespace StarExplorer.Views
         internal void ClearDisplayContent()
         {
             CurrentDisplayContent.Child = new Border();
+        }
+
+        public void Dispose()
+        {
+            //清理事件
+            this.HomeButtonCliked = null;
         }
     }
 }

@@ -20,6 +20,7 @@ namespace StarExplorer.Controls
         private int barHeight;
         private int barMargin;
         private int barCornerRadius;
+        private IImage? tabItemIcon;
         #endregion
 
         #region 封装属性
@@ -41,77 +42,17 @@ namespace StarExplorer.Controls
 
         public int CloseButtonSize { get => ItemHeight;  }
         public int MaxTextWidth { get => ItemWidth - ImageSize - CloseButtonSize - 6 * ItemMargin; }
+        public IImage? TabItemIcon { get => tabItemIcon; set { if (tabItemIcon != value) { tabItemIcon = value; OnPropertyChanged(nameof(TabItemIcon)); } } }
         #endregion
 
         #region 显示项抽象数据
-        public ObservableCollection<ITabDisplayContent> TabDisplayContents { get; set; } = new ObservableCollection<ITabDisplayContent>();
-
-        private void SyncDisplayContents(ITabManager tabManager)
-        {
-            ObservableCollection<ITabDisplayContent> newDisplayContents = new ObservableCollection<ITabDisplayContent>(TabDisplayContents);
-            AddItem(tabManager, newDisplayContents);
-            RemoveItem(tabManager, newDisplayContents);
-            TabDisplayContents = newDisplayContents;
-            OnPropertyChanged(nameof(TabDisplayContents));
-        }
-
-        private void AddItem(ITabManager tabManager, ObservableCollection<ITabDisplayContent> newContent)
-        {
-            foreach (var item in tabManager.tabContents)
-            {
-                bool isItemFounded = false;
-                foreach (var displayItem in TabDisplayContents)
-                {
-                    if (displayItem.Index == item.Index)
-                    {
-                        isItemFounded = true;
-                        break;
-                    }
-                }
-                if (isItemFounded == false)
-                {
-                    TabDisplayContent newDisplayContent = new TabDisplayContent()
-                    {
-                        Index = item.Index,
-                        Content = item.Content,
-                        CurrentBackgroundColor = TabItemBackGroundColor,
-                        Icon = null!, //TODO:设置默认图标
-                        Label = $"标签{item.Index}", //TODO:设置默认标签
-                        IsSelected = false
-                    };
-                    newContent.Add(newDisplayContent);
-                }
-
-            }
-        }
-
-        private void RemoveItem(ITabManager tabManager, ObservableCollection<ITabDisplayContent> newContent)
-        {
-            foreach (var displayItem in TabDisplayContents)
-            {
-                bool isItemFounded = false;
-                foreach (var item in tabManager.tabContents)
-                {
-                    if (displayItem.Index == item.Index)
-                    {
-                        isItemFounded = true;
-                        break;
-                    }
-                }
-                if (isItemFounded == false)
-                {
-                    newContent.Remove(displayItem);
-                }
-            }
-        }
+        public ObservableCollection<ITabDisplayContent> TabContents { get; set; } = new ObservableCollection<ITabDisplayContent>();
 
         #endregion
         public TabBarPanelData(ISettings settings, ITabManager tabManager)
         {
             InitSettings(settings);
             BindSettings(settings);
-            //事件绑定
-            tabManager.tabContents.CollectionChanged += (s, e) => SyncDisplayContents(tabManager);
         }
 
         private void InitSettings(ISettings settings)
@@ -127,6 +68,8 @@ namespace StarExplorer.Controls
             BarHeight = settings.TabTotalHeight;
             BarMargin = settings.TabBarMargin;
             BarCornerRadius = settings.TabBarCornerRadius;
+
+            TabItemIcon = settings.TabItemIcon!;
         }
 
         private void BindSettings(ISettings settings)
@@ -193,14 +136,17 @@ namespace StarExplorer.Controls
 
         public Action DisposeHandler { get => disposeHandler; }
 
-        public TabDisplayContent(Action DisposeHandler) 
+        public TabDisplayContent(int index, Panel content,Action DisposeHandler, IImage icon, string label) 
         {
             this.disposeHandler = DisposeHandler;
+            this.index = index;
+            this.content = content;
+            this.icon = icon;
+            this.label = label;
         }
 
         public int Index { get => index; set { index = value; OnPropertyChanged(nameof(Index)); } }
         public Panel Content { get => content; set { content = value; OnPropertyChanged(nameof(Index)); }  }
-        public Color CurrentBackgroundColor { get => currentBackgroundColor; set { currentBackgroundColor = value; OnPropertyChanged(nameof(CurrentBackgroundColor)); } }
         public IImage Icon { get => icon; set { icon = value; OnPropertyChanged(nameof(Icon)); } }
         public string Label { get => label; set { label = value; OnPropertyChanged(nameof(Label)); } }
         public bool IsSelected { get => isSelected; set { isSelected = value; OnPropertyChanged(nameof(IsSelected)); } }
@@ -213,16 +159,21 @@ namespace StarExplorer.Controls
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             });
         }
+
+        public void Dispose()
+        {
+            this.PropertyChanged = null;
+        }
     }
 
-    internal interface ITabDisplayContent
+    public interface ITabDisplayContent : IDisposable
     {
         public int Index { get; set; }
         public Panel Content { get; set; }
         public Action DisposeHandler { get; }
-        public Color CurrentBackgroundColor { get; set; }
         public IImage Icon { get; set; }
         public string Label { get; set; }
         public bool IsSelected { get; set; }
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

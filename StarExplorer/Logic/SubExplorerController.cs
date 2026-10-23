@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace StarExplorer.Logic
 {
-    internal class SubExplorerController
+    internal class SubExplorerController : IDisposable
     {
         //数据
         Panel root = null!;
@@ -182,6 +182,17 @@ namespace StarExplorer.Logic
         private void _DisposeDevicePanel()
         {
             this.DisposeDevicePanel?.Invoke();
+            this.DisposeDevicePanel = null;
+        }
+
+        public void Dispose()
+        {
+            //清理子资源
+            DisposeAll();
+            view.Dispose();
+            data.Dispose();
+            //清理本地事件
+            this.DisposeItemsPanel = null;
             this.DisposeDevicePanel = null;
         }
     }

@@ -36,7 +36,7 @@ namespace StarExplorer.Logic
         {
             abstractionLayer = new AbstractionLayer();
             settings = new Settings();
-            tabManager = new TabManager(settings.MaxTabCount); 
+            tabManager = new TabManager(settings ,settings.MaxTabCount); 
             coreData = new CoreData(abstractionLayer);
 
             mainWindowControler = new MainWindowControler(settings, coreData, tabManager);

@@ -21,6 +21,8 @@ namespace StarExplorer.Logic
         int tabItemWidth = 100;
         int tabItemHeight = 30;
         int maxTabCount = 5;
+
+        IImage? tabItemIcon;
         #endregion
 
         #region 设备显示模式的显示区设置
@@ -102,6 +104,7 @@ namespace StarExplorer.Logic
         public int TabItemWidth { get => tabItemWidth; set { tabItemWidth = value; OnPropertyChanged(nameof(TabItemWidth)); } }
         public int TabItemHeight { get => tabItemHeight; set { tabItemHeight = value; OnPropertyChanged(nameof(TabItemHeight)); } }
         public int MaxTabCount { get => maxTabCount; set { maxTabCount = value; OnPropertyChanged(nameof(MaxTabCount)); } }
+        public IImage? TabItemIcon { get => tabItemIcon; set { tabItemIcon = value; OnPropertyChanged(nameof(TabItemIcon)); } }
         #endregion
 
         #region 设备显示模式的显示区设置
@@ -207,6 +210,8 @@ namespace StarExplorer.Logic
             folderIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/Folder.png")));
             folderLinkIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/Folder_Junction.png")));
             fileIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/File.png")));
+            
+            tabItemIcon = new Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri($"avares://StarExplorer/Assets/avalonia-logo.ico")));
         }
 
         private void OnPropertyChanged(string propertyName)
@@ -239,6 +244,7 @@ namespace StarExplorer.Logic
         public int TabItemWidth { get; set; }
         public int TabItemHeight { get; set; }
         public int MaxTabCount { get; set; }
+        public IImage? TabItemIcon { get; set; }
         #endregion
 
         #region 设备显示模式的显示区设置

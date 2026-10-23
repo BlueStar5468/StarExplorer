@@ -37,12 +37,22 @@ namespace StarExplorer.Controls
                     tabItem.TabCloseButtonClicked += (id) => TabCloseButtonClicked?.Invoke(id);
                     tabItem.TabClicked += (id) => TabClicked?.Invoke(id);
 
+                    EventHandler<Avalonia.Interactivity.RoutedEventArgs> UnloadHandler = null!;
+                    UnloadHandler = (sender, e) =>
+                    {
+                        tabItem.TabCloseButtonClicked -= (id) => TabCloseButtonClicked?.Invoke(id);
+                        tabItem.TabClicked -= (id) => TabClicked?.Invoke(id);
+                        tabItem.GetInstance().Unloaded -= UnloadHandler;
+                        tabItem.Dispose();
+                    };
+                    tabItem.GetInstance().Unloaded += UnloadHandler;
+
                     return tabItem.GetInstance();
                 }, supportsRecycling: true)
             };
             //由于绑定目标在修改时会替换掉原有引用 故此处直接赋值会导致后续追踪丢失 故选择绑定属性来实现追踪
             tabControl.DataContext = dataContext;
-            tabControl.Bind(ItemsControl.ItemsSourceProperty, new Avalonia.Data.Binding(nameof(TabBarPanelData.TabDisplayContents)));
+            tabControl.Bind(ItemsControl.ItemsSourceProperty, new Avalonia.Data.Binding(nameof(TabBarPanelData.TabContents)));
 
             Grid.SetColumn(root, 0);
             root.Children.Add(tabControl);

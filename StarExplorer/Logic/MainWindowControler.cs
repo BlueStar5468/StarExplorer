@@ -25,6 +25,10 @@ namespace StarExplorer.Logic
 
         //事件
         public event Action? AppExitRequested;
+        //本地委托
+        Action? tabChangedHandler;
+        Action? tabAddButtonClickedHandler;
+        EventHandler? explorerOpenedHandler;
 
         public MainWindowControler(ISettings settings, ICoreData coreData, ITabManager tabManager)
         {
@@ -56,7 +60,8 @@ namespace StarExplorer.Logic
             //创建Tab栏以及初始标签页
             CreateTabBar();
             int id;
-            tabManager.NewTab(CreateSubExplorer(settings, coreData, (IToastCanvasController)toastCanvasController), out id);
+            var subExplorerCtl = CreateSubExplorer(settings, coreData, (IToastCanvasController)toastCanvasController);
+            tabManager.NewTab(subExplorerCtl.GetInstance(),() => subExplorerCtl.Dispose(), out id);
             tabManager.SelectTab(id);
         }
 
@@ -65,12 +70,33 @@ namespace StarExplorer.Logic
         {
             if (explorer == null || explorerData == null)
                 throw new InvalidOperationException("主窗口或数据上下文尚未创建，无法绑定事件");
+
+            InitHandler();
+
             //explorerData.AppExitRequested += OnAppExitRequested;
-            explorer.AddButtonClicked += AddTab;
-            explorer.Opened += OnWindowOpened;
-            tabManager.SelectedTabChanged += OnSelectedTabChanged;
-            //测试:创建测试Toast通知
-            //toastCanvasController.ShowToast("测试通知");
+            explorer.AddButtonClicked += tabAddButtonClickedHandler;
+            explorer.Opened += explorerOpenedHandler;
+
+            tabManager.SelectedTabChanged += this.tabChangedHandler;
+        }
+
+        private void InitHandler()
+        {
+            this.tabChangedHandler += () =>
+            {
+                RefreshDisplay();
+            };
+            this.tabAddButtonClickedHandler += () =>
+            {
+                if (explorerData == null) throw new Exception("数据上下文尚未创建，无法添加标签页");
+                var subExplorerCtl = CreateSubExplorer(settings, coreData, (IToastCanvasController)toastCanvasController);
+                tabManager.NewTab(subExplorerCtl.GetInstance(), () => subExplorerCtl.Dispose(), out int _);
+            };
+            this.explorerOpenedHandler += (s,e) =>
+            {
+                if (Design.IsDesignMode) return;
+                RefreshDisplay();
+            };
         }
 
         private void RefreshDisplay()
@@ -78,32 +104,14 @@ namespace StarExplorer.Logic
             if (explorer == null) throw new Exception("主窗口尚未创建，无法刷新显示");
             explorer.ClearMainDisplay();
 
-            if (tabManager.CurrentTabId == -1) return; //没有选中标签页时直接返回
-            explorer.MountToMainDisplay(tabManager.GetSelectedTab().Content);
-        }
-
-
-        private Panel CreateDevicePanel()
-        {
-            DevicePanelController devicePanelController = new DevicePanelController(settings, coreData);
-
-            return devicePanelController.GetInstance();
+            var content = tabManager.GetSelectedTabContent();
+            if (content == null) return;
+            explorer.MountToMainDisplay(content);
         }
 
         internal void CreateTabBar()
         {
-            tabBarPanelData = new TabBarPanelData(settings, tabManager);
-            TabBarPanel tabBarPanel = new TabBarPanel(tabBarPanelData);
-            explorer?.MountToTabGrid(tabBarPanel.GetInstance());
-            //标签页事件绑定
-            tabBarPanel.TabClicked += OnTabBarClicked;
-            tabBarPanel.TabCloseButtonClicked += OnTabCloseButtonClicked;
-        }
-
-        private void AddTab()
-        {
-            if (explorerData == null) throw new Exception("数据上下文尚未创建，无法添加标签页");
-            tabManager.NewTab(CreateSubExplorer(settings, coreData, (IToastCanvasController)toastCanvasController), out int _);
+            explorer?.MountToTabGrid(tabManager.GetTabbarPanel());
         }
 
         //封装方法
@@ -132,50 +140,13 @@ namespace StarExplorer.Logic
             }
         }
 
-        public Panel CreateSubExplorer(ISettings settings, ICoreData coreData, IToastCanvasController toastCanvasController)
+        private SubExplorerController CreateSubExplorer(ISettings settings, ICoreData coreData, IToastCanvasController toastCanvasController)
         {
             subExplorerController = new SubExplorerController(coreData, settings, toastCanvasController);
-            return subExplorerController.GetInstance();
+            return subExplorerController;
         }
 
         //事件响应方法
-        private void OnWindowOpened(object? sender, EventArgs e)
-        {
-            if (Design.IsDesignMode) return;
-
-            RefreshDisplay();
-        }
-
-        private void OnSelectedTabChanged()
-        {
-            if (explorerData == null) throw new Exception("数据上下文尚未创建");
-            if (tabBarPanelData == null) throw new Exception("标签栏数据尚未创建，无法响应标签页变更事件");
-
-            foreach (var tab in tabBarPanelData.TabDisplayContents)
-            {
-                if (tab.Index == tabManager.CurrentTabId)
-                {
-                    tab.CurrentBackgroundColor = tabBarPanelData.SelectedColor;
-                    tab.IsSelected = true;
-                }
-                else
-                {
-                    tab.CurrentBackgroundColor = tabBarPanelData.TabItemBackGroundColor;
-                    tab.IsSelected = false;
-                }
-            }
-            RefreshDisplay();
-        }
-
-        private void OnTabBarClicked(int id)
-        {
-            tabManager.SelectTab(id);
-        }
-
-        private void OnTabCloseButtonClicked(int id)
-        {
-            tabManager.CloseTab(id);
-        }
 
         private void OnAppExitRequested()
         {

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace StarExplorer.Views
 {
-    internal class SubExplorerData : INotifyPropertyChanged
+    internal class SubExplorerData : INotifyPropertyChanged, IDisposable
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         //依赖项
@@ -22,6 +22,8 @@ namespace StarExplorer.Views
         int adressBoxHeight;
         int adressBoxCornerRadius;
         Color themeColor;
+        //本地委托事件
+        PropertyChangedEventHandler? settingsChangedhandler;
 
 
         public SubExplorerData(ISettings settings) 
@@ -52,7 +54,7 @@ namespace StarExplorer.Views
         }
         private void BindSettings(ISettings settings)
         {
-            settings.PropertyChanged += (sender, e) =>
+            settingsChangedhandler = (sender, e) =>
             {
                 switch (e.PropertyName)
                 {
@@ -70,6 +72,7 @@ namespace StarExplorer.Views
                         break;
                 }
             };
+            settings.PropertyChanged += settingsChangedhandler;
         }
 
         internal void SetPath(string path)
@@ -84,6 +87,12 @@ namespace StarExplorer.Views
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             });
+        }
+
+        public void Dispose()
+        {
+            //清理本地委托绑定
+            settings.PropertyChanged -= settingsChangedhandler;
         }
     }
 }
