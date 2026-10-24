@@ -1,6 +1,8 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using StarExplorer.Controls;
 using StarExplorer.Logic;
 using System;
@@ -20,17 +22,22 @@ namespace StarExplorer.Views
         Panel root;
 
         Border CurrentDisplayContent = null!;
+        TextBox addressBox;
+
+        bool isAddressEntered = false;  //address失焦时是否需要更新路径
 
         //事件
-        public Action? HomeButtonCliked;
-        public Action<string>? AddressBoxTextChanged;
+        public event Action? HomeButtonCliked;
+        public event Action<AddressBoxEventArgs>? AddressBoxEvent;
         //本地委托
-        EventHandler<TextChangedEventArgs> addressBoxChangedHandler;
+        EventHandler<Avalonia.Input.KeyEventArgs>? addressBoxKeyPressedHandler;
+        EventHandler<FocusChangedEventArgs>? addressBoxLoseFocusedHandler;
 
 
         public SubExplorer(SubExplorerData dataContext)
         {
             this.dataContext = dataContext;
+            InitHandler();
 
             root = BuildPanel();
         }
@@ -82,19 +89,20 @@ namespace StarExplorer.Views
                 homeButton.Bind(Button.HeightProperty, new Binding(nameof(dataContext.AdressBoxHeight)) { Source = dataContext });
                 homeButton.Margin = new Avalonia.Thickness(10, 0, 0, 0);
 
-                TextBox adressBox = new TextBox();
-                adressBox.Bind(TextBox.CornerRadiusProperty, new Binding(nameof(dataContext.AdressBoxCornerRadius)) { Source = dataContext , Converter = new CornerRadiusConverter()});
-                adressBox.Margin = new Avalonia.Thickness(10, 0, 10, 0);
+                addressBox = new TextBox();
+                addressBox.Bind(TextBox.CornerRadiusProperty, new Binding(nameof(dataContext.AdressBoxCornerRadius)) { Source = dataContext , Converter = new CornerRadiusConverter()});
+                addressBox.Margin = new Avalonia.Thickness(10, 0, 10, 0);
                 //此处绑定使用单向 因为输入需要验证路径的合法性
-                adressBox.Bind(TextBox.TextProperty, new Binding(nameof(dataContext.Path)) { Source = dataContext, Mode = BindingMode.OneWay });
-                adressBox.IsInactiveSelectionHighlightEnabled = false;
+                addressBox.Bind(TextBox.TextProperty, new Binding(nameof(dataContext.Path)) { Source = dataContext, Mode = BindingMode.OneWay });
+                addressBox.IsInactiveSelectionHighlightEnabled = false;
                 //潜在泄漏点:adressBox非正常被长生命周期的对象持有引用
-                //adressBox.TextChanged += (s,e) => this.AddressBoxTextChanged?.Invoke(((TextBox)s!).Text!);
+                addressBox.KeyDown += addressBoxKeyPressedHandler;
+                addressBox.LostFocus += addressBoxLoseFocusedHandler;
 
-                Grid.SetColumn(adressBox, 1);
+                Grid.SetColumn(addressBox, 1);
                 Grid.SetColumn(homeButton, 0);
                 adressBorderGrid.Children.Add(homeButton);
-                adressBorderGrid.Children.Add(adressBox);
+                adressBorderGrid.Children.Add(addressBox);
 
                 adressBorder.Child = adressBorderGrid;
                 Grid.SetRow(adressBorder, 0);
@@ -125,6 +133,40 @@ namespace StarExplorer.Views
 
         //封装方法
 
+        private void InitHandler()
+        {
+            addressBoxKeyPressedHandler = (s, e) =>
+            {
+                if (e.Key == Avalonia.Input.Key.Enter)
+                {
+                    TextBox? adressBox = s as TextBox;
+                    if (adressBox == null) return;  //理论上这部分不可能触发
+                    string enteredPath = adressBox.Text ?? "/";
+                    //在上层逻辑中验证路径合法性,此处只触发事件
+                    isAddressEntered = true;
+                    //此时不触发设置地址 统一在失焦后触发
+
+                    //清除焦点
+                    var p = adressBox.GetVisualParent();
+                    while (p != null)
+                    {
+                        if (p is Avalonia.Controls.Window)
+                            break;
+                        p = p.GetVisualParent();
+                    }
+                    if (p is not Avalonia.Controls.Window)
+                        throw new Exception("Root window not found");
+                    var rootWindow = p as Avalonia.Controls.Window;
+                    rootWindow?.Focus();  //将焦点设置到窗口上,以触发失焦事件
+                }
+            };
+
+            addressBoxLoseFocusedHandler = (s, e) =>
+            {
+                this.AddressBoxEvent?.Invoke(new AddressBoxEventArgs((s as TextBox)?.Text ?? "/", isAddressEntered));
+            };
+        }
+
         internal void SetMainDisplayContent(Panel content)
         {
             Grid.SetRow(content, 1);
@@ -136,10 +178,30 @@ namespace StarExplorer.Views
             CurrentDisplayContent.Child = new Border();
         }
 
+        internal void SetAddressBoxContent(string content)
+        {
+            addressBox.Text = content;
+        }
+
         public void Dispose()
         {
             //清理事件
             this.HomeButtonCliked = null;
+            this.AddressBoxEvent = null;
+            //解除事件绑定
+            addressBox.LostFocus -= this.addressBoxLoseFocusedHandler;
+            addressBox.KeyDown -= this.addressBoxKeyPressedHandler;
+        }
+    }
+
+    class AddressBoxEventArgs : EventArgs
+    {
+        public string TargetPath { get; set; }
+        public bool InputORDispose { get; set; }
+        public AddressBoxEventArgs(string enteredPath, bool inputORDispose)
+        {
+            TargetPath = enteredPath;
+            InputORDispose = inputORDispose;
         }
     }
 }

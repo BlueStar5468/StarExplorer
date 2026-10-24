@@ -25,7 +25,7 @@ namespace StarExplorer.Logic
         public Action? DisposeDevicePanel;
         public Action? DisposeItemsPanel;
         //内部处理委托
-        Action<string>? addressBoxChangedHandler;
+        Action<AddressBoxEventArgs>? addressBoxEventHandler;
 
         public SubExplorerController(ICoreData coreData, ISettings settings, IToastCanvasController toastCanvasController)
         {
@@ -117,18 +117,61 @@ namespace StarExplorer.Logic
         private void BindEvent()
         {
             view.HomeButtonCliked += OnHomeButtonClicked;
-            view.AddressBoxTextChanged += addressBoxChangedHandler;
+            view.AddressBoxEvent += addressBoxEventHandler;
         }
 
         private void InitHandler()
         {
-            this.addressBoxChangedHandler = (path) =>
+            this.addressBoxEventHandler = (args) =>
             {
-                //处理地址栏文本变更事件
-                string newPath = path;
-                Debug.WriteLine($"Trying Change path to: {newPath}");
-                //此方法会尝试以此路径刷新ItemsPanel，如果路径无法切换会自动调用事件恢复地址栏内容
-                currentItemPanelCtl?.SetPathAndRefresh(newPath);
+                if (args.InputORDispose == true)
+                {
+                    //处理地址栏文本变更事件
+                    string newPath = args.TargetPath;
+                    Debug.WriteLine($"Trying Change path to: {newPath}");
+                    //根切换
+                    if (newPath == "/")
+                    {
+                        if (currentPanelType == CurrentPanelType.ItemsPanel)
+                        {
+                            view.ClearDisplayContent();
+                            this._DisposeItemsPanel();
+
+                            view.SetMainDisplayContent(CreateDevicePanel());
+                            this.currentPanelType = CurrentPanelType.DevicePanel;
+                        }
+                        else if (currentPanelType == CurrentPanelType.DevicePanel)
+                        {
+                            //设备页面的地址本身就是"/" 无需切换
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        //普通目录切换
+                        if (currentPanelType == CurrentPanelType.ItemsPanel)
+                        {
+                            //此方法会尝试以此路径刷新ItemsPanel，如果路径无法切换会自动调用事件恢复地址栏内容
+                            currentItemPanelCtl?.SetPathAndRefresh(newPath);
+                        }
+                        else if (currentPanelType == CurrentPanelType.DevicePanel)
+                        {
+                            //需要销毁DevicePanel并创建新的ItemsPanel
+                            view.ClearDisplayContent();
+                            this._DisposeDevicePanel();
+
+                            currentItemPanelCtl = CreateItemPanel(args.TargetPath);
+                            view.SetMainDisplayContent(currentItemPanelCtl.GetInstance());
+                            this.currentPanelType = CurrentPanelType.ItemsPanel;
+                        }
+                    }
+                }
+                else
+                {
+                    //表明用户是点击其他地方导致地址栏失焦的 需要回退地址
+                    string currentPath = data.Path;
+                    view.SetAddressBoxContent(currentPath);
+                }
             };
         }
 
@@ -210,7 +253,7 @@ namespace StarExplorer.Logic
             view.Dispose();
 
             view.HomeButtonCliked -= OnHomeButtonClicked;
-            view.AddressBoxTextChanged -= addressBoxChangedHandler;
+            view.AddressBoxEvent -= addressBoxEventHandler;
 
             data.Dispose();
             //清理本地事件
