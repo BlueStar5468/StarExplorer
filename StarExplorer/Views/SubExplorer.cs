@@ -23,10 +23,15 @@ namespace StarExplorer.Views
 
         //事件
         public Action? HomeButtonCliked;
+        public Action<string>? AddressBoxTextChanged;
+        //本地委托
+        EventHandler<TextChangedEventArgs> addressBoxChangedHandler;
+
 
         public SubExplorer(SubExplorerData dataContext)
         {
             this.dataContext = dataContext;
+
             root = BuildPanel();
         }
 
@@ -82,6 +87,9 @@ namespace StarExplorer.Views
                 adressBox.Margin = new Avalonia.Thickness(10, 0, 10, 0);
                 //此处绑定使用单向 因为输入需要验证路径的合法性
                 adressBox.Bind(TextBox.TextProperty, new Binding(nameof(dataContext.Path)) { Source = dataContext, Mode = BindingMode.OneWay });
+                adressBox.IsInactiveSelectionHighlightEnabled = false;
+                //潜在泄漏点:adressBox非正常被长生命周期的对象持有引用
+                //adressBox.TextChanged += (s,e) => this.AddressBoxTextChanged?.Invoke(((TextBox)s!).Text!);
 
                 Grid.SetColumn(adressBox, 1);
                 Grid.SetColumn(homeButton, 0);

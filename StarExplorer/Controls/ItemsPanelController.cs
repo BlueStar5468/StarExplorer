@@ -80,6 +80,8 @@ namespace StarExplorer.Controls
             };
         }
 
+        //异步刷新方法
+        //此方法可作为fire-and-forget在本项目中的标准示例使用
         public void SetPathAndRefresh(string path)
         {
             Debug.WriteLine($"Setting path to: {path}");
@@ -105,8 +107,14 @@ namespace StarExplorer.Controls
                     panelData.UpdateItems(task.Result.Item2);
                     this.PathChanged?.Invoke(path);
                 }
+                else
+                {
+                    //失败时不更新path，保持原来的path不变
+                    this.PathChanged?.Invoke(this.path!);
+                }
             });
         }
+
         public Panel GetInstance()
         {
             return panel.GetInstance();

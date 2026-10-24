@@ -17,7 +17,7 @@
 
         WindowDecorations="Full"
         
-        
+        Focusable="True"
 
         Icon="/Assets/avalonia-logo.ico"
         Title="StarExplorer">
@@ -26,7 +26,7 @@
         TransparencyLevelHint="AcrylicBlur"
         -->
 
-    <DockPanel Background="LightGray">
+    <DockPanel Background="LightGray" x:Name="RootDockPanel">
         <Grid DockPanel.Dock="Top" x:Name="TitleBarGird" Height="40">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>

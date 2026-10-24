@@ -176,6 +176,7 @@ namespace StarExplorer.Controls
                 {
                     rightClicked?.Invoke(deviceDataContent.ID);
                 }
+                e.Handled = true;
             };
 
             this.selectStatusUpdated = (s, e) =>

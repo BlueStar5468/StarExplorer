@@ -15,6 +15,8 @@ namespace StarExplorer.Logic
 
         CurrentPanelType currentPanelType;
         CurrentPanelType defaltPanelType;
+
+        ItemsPanelController? currentItemPanelCtl;   //当前ItemsPanel实例 不保证随时可用
         //依赖
         ICoreData coreData;
         ISettings settings;
@@ -22,6 +24,8 @@ namespace StarExplorer.Logic
         //事件
         public Action? DisposeDevicePanel;
         public Action? DisposeItemsPanel;
+        //内部处理委托
+        Action<string>? addressBoxChangedHandler;
 
         public SubExplorerController(ICoreData coreData, ISettings settings, IToastCanvasController toastCanvasController)
         {
@@ -30,6 +34,7 @@ namespace StarExplorer.Logic
             this.toastCanvasController = toastCanvasController;
 
             CreatWindow();
+            InitHandler();
             BindEvent();
 
             CreateStartPanel();
@@ -50,11 +55,11 @@ namespace StarExplorer.Logic
 
             data.SetPath(devicePath);
             //创建ItemsPanel
-            Panel itemsPanel = CreateItemPanel(data.Path);
+            currentItemPanelCtl = CreateItemPanel(data.Path);
             currentPanelType = CurrentPanelType.ItemsPanel;
             view.ClearDisplayContent();
             this._DisposeDevicePanel();
-            view.SetMainDisplayContent(itemsPanel);
+            view.SetMainDisplayContent(currentItemPanelCtl.GetInstance());
         }
 
         private void OnHomeButtonClicked()
@@ -112,6 +117,19 @@ namespace StarExplorer.Logic
         private void BindEvent()
         {
             view.HomeButtonCliked += OnHomeButtonClicked;
+            view.AddressBoxTextChanged += addressBoxChangedHandler;
+        }
+
+        private void InitHandler()
+        {
+            this.addressBoxChangedHandler = (path) =>
+            {
+                //处理地址栏文本变更事件
+                string newPath = path;
+                Debug.WriteLine($"Trying Change path to: {newPath}");
+                //此方法会尝试以此路径刷新ItemsPanel，如果路径无法切换会自动调用事件恢复地址栏内容
+                currentItemPanelCtl?.SetPathAndRefresh(newPath);
+            };
         }
 
         private void CreateStartPanel()
@@ -147,7 +165,7 @@ namespace StarExplorer.Logic
             return devicePanelController.GetInstance();
         }
 
-        private Panel CreateItemPanel(String path)
+        private ItemsPanelController CreateItemPanel(String path)
         {
             //在path路径下创建ItemsPanel
             ItemsPanelController itemsPanelController = new ItemsPanelController(settings, coreData);
@@ -163,7 +181,7 @@ namespace StarExplorer.Logic
                 itemsPanelController.Dispose();
             };
 
-            return itemsPanelController.GetInstance();
+            return itemsPanelController;
         }
 
         private void DisposeAll()
@@ -190,6 +208,10 @@ namespace StarExplorer.Logic
             //清理子资源
             DisposeAll();
             view.Dispose();
+
+            view.HomeButtonCliked -= OnHomeButtonClicked;
+            view.AddressBoxTextChanged -= addressBoxChangedHandler;
+
             data.Dispose();
             //清理本地事件
             this.DisposeItemsPanel = null;
