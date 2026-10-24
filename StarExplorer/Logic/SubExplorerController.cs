@@ -90,7 +90,7 @@ namespace StarExplorer.Logic
         private void OnPathChanged(string newPath)
         {
             //处理路径变更事件
-            Debug.WriteLine($"Core Path changed to: {newPath}");
+            Debug.WriteLine($"Path changed to: {newPath}");
             data.SetPath(newPath);
             //刷新ItemsPanel由对应的ItemsPanelController处理
         }

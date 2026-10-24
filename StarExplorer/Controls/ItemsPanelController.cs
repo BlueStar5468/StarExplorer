@@ -5,6 +5,9 @@ using StarExplorer.Shared;
 using System;
 using System.Net.Sockets;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace StarExplorer.Controls
 {
@@ -21,6 +24,8 @@ namespace StarExplorer.Controls
         public Action<string, string>? MessageGenerated;
         //数据
         string? path;
+        //本地委托
+        Action<Exception,string>? fileExceptionHandler;
 
         public ItemsPanelController(ISettings settings, ICoreData coreData)
         {
@@ -29,6 +34,7 @@ namespace StarExplorer.Controls
             
             CreateWindow();
             BindEvents();
+            InitHandler();
         }
 
         //封装方法
@@ -42,62 +48,65 @@ namespace StarExplorer.Controls
         {
             //在此处绑定ItemsPanel相关事件
             //必须确定OpenFolder正常后才能向外部发送PathChanged事件
-            panel.PathChanged += OnPathChanged;
+            panel.PathChanged += SetPathAndRefresh;
         }
 
-        private void RefereshPathItem()
+        private void InitHandler()
         {
-            if (path != null)
+            fileExceptionHandler = (e,path) =>
             {
-                //此处Exception在上层调用捕获
-                List<Item> newItems = coreData.GetFoldersAndFilesByPath(this.path);
-                panelData.UpdateItems(newItems); //更新Items后data会向panel发送通知，panel会刷新显示
-            }
-            else
-            {
-                throw new Exception("Path is null, cannot refresh items.");
-            }
-        }
-
-        private bool OpenFolder(string path)
-        {
-            try
-            {
-                this.SetPathAndRefresh(path);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                if (ex is System.UnauthorizedAccessException)
+                //注意注意！！！ 这里的异常处理不在UI线程上 发送消息请先切换到UI线程
+                if (e is System.UnauthorizedAccessException)
                 {
-                    MessageGenerated?.Invoke("Error", $"Access denied to the path: {path}. Please check your permissions.");
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        MessageGenerated?.Invoke("Error", $"Access denied to the path: {path}. Please check your permissions.");
+                    });               
                 }
-                else if (ex is System.IO.DirectoryNotFoundException)
+                else if (e is System.IO.DirectoryNotFoundException)
                 {
-                    MessageGenerated?.Invoke("Error", $"The directory was not found: {path}. Please check the path.");
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        MessageGenerated?.Invoke("Error", $"The directory was not found: {path}. Please check the path.");
+                    });                  
                 }
                 else
                 {
-                    MessageGenerated?.Invoke("Error", $"An unexpected error occurred: {ex.Message}");
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        MessageGenerated?.Invoke("Error", $"An unexpected error occurred: {e.Message}");
+                    });     
                 }
-                return false;
-            }
-        }
-
-        private void OnPathChanged(string path)
-        {
-            var result = this.OpenFolder(path);
-            if (result)
-                this.PathChanged?.Invoke(path);
+            };
         }
 
         public void SetPathAndRefresh(string path)
         {
             Debug.WriteLine($"Setting path to: {path}");
-            this.path = path;
-            RefereshPathItem();
+            Task.Run(() =>
+            {
+                try
+                {
+                    return (success:true ,coreData.GetFoldersAndFilesByPath(path));
+                }
+                catch (Exception ex)
+                {
+                    fileExceptionHandler?.Invoke(ex, path);
+                    return (success:false, null!);
+                }
+            }
+            ).ContinueWith((task) =>
+            {
+                if (task.Result.success)
+                {
+                    //必须执行成功后才能更新path，否则可能会导致path与显示的内容不一致
+                    this.path = path;
+                    //注意 此方法构造的List并不是Observabal的 通知UI时已经套了线程调用 可以安全的在后台运行
+                    panelData.UpdateItems(task.Result.Item2);
+                    this.PathChanged?.Invoke(path);
+                }
+            });
         }
-
         public Panel GetInstance()
         {
             return panel.GetInstance();

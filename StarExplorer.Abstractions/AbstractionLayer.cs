@@ -69,7 +69,14 @@ namespace StarExplorer.Abstractions
             if (platform == Platform.Windows)
             {
                 if (backend != null)
-                    backend.GetFoldersAndFilesByPath(path, out items);
+                    try
+                    {
+                        backend.GetFoldersAndFilesByPath(path, out items);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw;
+                    }
                 else
                     throw new InvalidOperationException("指定后端为空");
             }

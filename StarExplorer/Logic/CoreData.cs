@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using StarExplorer.Abstractions;
 using StarExplorer.Shared;
 
@@ -36,6 +37,14 @@ namespace StarExplorer.Logic
             return _FAL.GetFoldersAndFilesByPath(path);
         }
 
+        public Task<List<Item>> GetFoldersAndFilesByPathAsync(string path)
+        {
+            return Task.Run(() =>
+            {
+                return GetFoldersAndFilesByPath(path);
+            });
+        }
+
         //封装方法
         public void RefreshDevices()
         {
@@ -69,5 +78,6 @@ namespace StarExplorer.Logic
         public event PropertyChangedEventHandler? PropertyChanged;
         public List<LogicDevices> Devices { get; set; }
         public List<Item> GetFoldersAndFilesByPath(string path);
+        public Task<List<Item>> GetFoldersAndFilesByPathAsync(string path);
     }
 }

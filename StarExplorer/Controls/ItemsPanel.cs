@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Avalonia.Data;
 using Avalonia.Media;
 using StarExplorer.Shared;
 using System;
@@ -114,7 +115,7 @@ namespace StarExplorer.Controls
                 }, false)
                 //此处false不复用是必要的,防止切换目录后,ItemsControl的ItemTemplate复用旧的FolderItemsControl,导致显示错误 
             };
-            ItemsControl.ItemsSource = dataContext.ItemsDataContexts;
+            ItemsControl.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(dataContext.ItemsDataContexts)) { Source = dataContext });
             //绑定items变化
             this.ItemsChangedHandler = (s, e) =>
             {

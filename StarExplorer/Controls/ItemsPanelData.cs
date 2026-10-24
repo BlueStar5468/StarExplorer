@@ -33,7 +33,6 @@ namespace StarExplorer.Controls
         IImage? folderLinkIcon;
         IImage? fileIcon;
 
-        List<Item> items = new List<Item>(); //当前目录的文件和文件夹列表
         //下面List用于绑定UI
         ObservableCollection<IItemsDataContext> itemsDataContexts = new ObservableCollection<IItemsDataContext>(); //组合item后的DataContext列表
 
@@ -51,8 +50,7 @@ namespace StarExplorer.Controls
         public IImage? FileIcon { get { return fileIcon; } set { fileIcon = value; OnPropertyChanged(nameof(FileIcon)); } }
 
 
-        //注:以下两个属性的OnPropertyChanged方法在此处没有实现 因为需要手动控制并配合UI修改引用绑定
-        public List<Item> Items { get { return items; } set { items = value; } }
+        //注:以下属性的OnPropertyChanged方法在此处没有实现 因为需要手动控制并配合UI修改引用绑定
         public ObservableCollection<IItemsDataContext> ItemsDataContexts { get { return itemsDataContexts; } set { itemsDataContexts = value; } }
 
         public ItemsPanelData(ISettings settings)
@@ -131,16 +129,16 @@ namespace StarExplorer.Controls
 
         internal void UpdateItems(List<Item> newItems)
         {
-            Items.Clear();
             ItemsDataContexts.Clear();
             idManager.Clear();
+            var newContext = new ObservableCollection<IItemsDataContext>();
             foreach (Item item in newItems)
             {
-                Items.Add(item);
                 ItemDataContext itemDataContext = new ItemDataContext(idManager.GetID(), item);
-                ItemsDataContexts.Add(itemDataContext);
+                newContext.Add(itemDataContext);
             }
-            this.OnPropertyChanged(nameof(Items));
+            //ItemsControl绑定的是属性而不是这个字段 因此可以替换引用来触发UI刷新 而不是Clear+AddRange
+            ItemsDataContexts = newContext;
             this.OnPropertyChanged(nameof(ItemsDataContexts));
         }
 
