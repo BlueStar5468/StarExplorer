@@ -78,7 +78,7 @@ namespace StarExplorer.Abstractions
                     {
                         backend.GetFoldersAndFilesByPath(path, out items);
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         throw;
                     }
@@ -88,9 +88,18 @@ namespace StarExplorer.Abstractions
             return items;
         }
 
+        //目前仅限windows
+        //已测试
         public byte[] GetItemsIcon(string path, bool isLarge = true, bool isOverlay = true)
         {
-            return externalInvoker.GetFileIconWindows(path, isLarge, isOverlay);
+            if (platform == Platform.Windows)
+            {
+                return externalInvoker.GetFileIconWindows(path, isLarge, isOverlay);
+            }
+            else
+            {
+                throw new NotSupportedException("不支持的平台");
+            }
         }
     }
 
