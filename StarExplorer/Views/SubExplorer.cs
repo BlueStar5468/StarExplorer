@@ -22,7 +22,7 @@ namespace StarExplorer.Views
         Panel root;
 
         Border CurrentDisplayContent = null!;
-        TextBox addressBox;
+        TextBox addressBox = null!;
 
         bool isAddressEntered = false;  //address失焦时是否需要更新路径
 
@@ -176,11 +176,6 @@ namespace StarExplorer.Views
         internal void ClearDisplayContent()
         {
             CurrentDisplayContent.Child = new Border();
-        }
-
-        internal void SetAddressBoxContent(string content)
-        {
-            addressBox.Text = content;
         }
 
         public void Dispose()

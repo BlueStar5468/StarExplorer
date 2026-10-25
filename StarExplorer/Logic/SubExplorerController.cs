@@ -170,7 +170,8 @@ namespace StarExplorer.Logic
                 {
                     //表明用户是点击其他地方导致地址栏失焦的 需要回退地址
                     string currentPath = data.Path;
-                    view.SetAddressBoxContent(currentPath);
+                    data.SetPath(currentPath); //通过data的SetPath方法来触发地址栏内容回退
+                    //注：采用MVVM模式方式的UI不需要直接控制的方法 触发UI同步即可
                 }
             };
         }
