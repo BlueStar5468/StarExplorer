@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using StarExplorer.Logic;
 using StarExplorer.Shared;
+using StarExplorer.Shared.SharedInterface;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

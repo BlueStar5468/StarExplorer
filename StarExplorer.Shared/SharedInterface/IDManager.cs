@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StarExplorer.Shared
+namespace StarExplorer.Shared.SharedInterface
 {
     public class IDManager
     {

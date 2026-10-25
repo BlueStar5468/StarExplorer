@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using StarExplorer.Abstractions;
 using StarExplorer.Shared;
+using StarExplorer.Shared.SharedInterface;
 
 namespace StarExplorer.Logic
 {

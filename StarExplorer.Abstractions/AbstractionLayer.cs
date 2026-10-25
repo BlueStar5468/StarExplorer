@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using StarExplorer.Shared;
+using StarExplorer.Shared.SharedInterface;
 
 namespace StarExplorer.Abstractions
 {
@@ -12,6 +13,7 @@ namespace StarExplorer.Abstractions
         //系统信息
         Platform? platform = null;
         IBackend? backend = null;
+        ExternalInvoker externalInvoker = null!;
 
         public AbstractionLayer()
         {
@@ -22,10 +24,10 @@ namespace StarExplorer.Abstractions
         {
             this.platform = dataPack.Platform;
 
-            InitFAL();
+            InitFAL(dataPack);
         }
 
-        public void InitFAL()
+        public void InitFAL(InitializeDataPack dataPack)
         {
             //检测平台并初始化后端
             if (this.platform == Platform.Windows)
@@ -47,6 +49,9 @@ namespace StarExplorer.Abstractions
             {
                 throw new NotSupportedException("不支持的平台");
             }
+            //启动外部调用器
+            externalInvoker = new ExternalInvoker(this.backend!);
+            externalInvoker.Initialize(dataPack);
         }
 
         public List<LogicDevices> GetDevices()
@@ -82,11 +87,15 @@ namespace StarExplorer.Abstractions
             }
             return items;
         }
+
+        public byte[] GetItemsIcon(string path, bool isLarge = true, bool isOverlay = true)
+        {
+            return externalInvoker.GetFileIconWindows(path, isLarge, isOverlay);
+        }
     }
 
     public interface IAbstractionLayer : IModule
     {
-        void InitFAL();
         List<LogicDevices> GetDevices();
         List<Item> GetFoldersAndFilesByPath(string path);
     }

@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using StarExplorer.Controls;
 using StarExplorer.Shared;
+using StarExplorer.Shared.SharedInterface;
 using StarExplorer.Views;
 using System;
 using System.Runtime.InteropServices;

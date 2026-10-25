@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Platform;
 using StarExplorer.Controls;
 using StarExplorer.Shared;
+using StarExplorer.Shared.SharedInterface;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

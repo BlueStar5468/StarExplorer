@@ -1,6 +1,7 @@
 ﻿using Avalonia.Media;
 using Avalonia.Platform;
 using StarExplorer.Shared;
+using StarExplorer.Shared.SharedInterface;
 using System;
 using System.ComponentModel;
 using System.Security.Cryptography.X509Certificates;
