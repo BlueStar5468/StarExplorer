@@ -1,15 +1,11 @@
 ﻿using StarExplorer.Logic;
 using Avalonia.Controls;
-using System.Collections.Generic;
 using StarExplorer.Shared;
 using System;
-using System.Net.Sockets;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.IO;
-using Avalonia.Media.Imaging;
 using Avalonia.Media;
 using System.Collections.ObjectModel;
 
@@ -27,18 +23,20 @@ namespace StarExplorer.Controls
         public Action<string>? PathChanged;
         public Action<string, string>? MessageGenerated;
         //数据
-        string? path;
+        string? fallBackPath;
         CancellationTokenSource tokenSource = null!; //需要时再创建
         object tokenSourceLock = new object(); //锁对象 用于保护tokenSource的访问
         //本地委托
         Action<Exception,string>? fileExceptionHandler;
         Action<Exception, string>? imageLoadExceptionHandler;
-        Action? itemsIconLoadHandler;
+        Action<string>? itemsIconLoadHandler;
 
-        public ItemsPanelController(ISettings settings, ICoreData coreData)
+        public ItemsPanelController(ISettings settings, ICoreData coreData,string path)
         {
             this.settings = settings;
             this.coreData = coreData;
+            //初始化path引用
+            this.fallBackPath = path;
             
             CreateWindow();
             InitHandler();  //注意顺序!
@@ -96,28 +94,25 @@ namespace StarExplorer.Controls
                 });
             };
 
-            itemsIconLoadHandler = () =>
+            itemsIconLoadHandler = (path) =>
             {
                 //此处可以处理布局更新后的逻辑
                 Debug.WriteLine("ItemsPanel layout updated.Start to Load Icons Asyncly");
 
-                this.LoadFileImageAsync();
+                this.LoadFileImageAsync(path);
             };
         }
 
         //异步刷新方法
         //此方法可作为fire-and-forget在本项目中的标准示例使用
+        //待进行的重构:此方法位置不对 应该在SubExplorerController中处理 这里导致了对SubExplorer的path的引用需求
         public void SetPathAndRefresh(string path)
         {
             Debug.WriteLine($"Setting path to: {path}");
             //修改位置后 需要取消图标加载任务
-            try
+            lock (tokenSourceLock)
             {
                 this.tokenSource?.Cancel();
-            }
-            catch (Exception)
-            {
-                //取消任务时可能会抛出异常(已经执行完并Dispose) 这里捕获并忽略
             }
 
             Task.Run(() =>
@@ -137,23 +132,23 @@ namespace StarExplorer.Controls
                 if (task.Result.success)
                 {
                     //必须执行成功后才能更新path，否则可能会导致path与显示的内容不一致
-                    this.path = path;
+                    this.fallBackPath = path;
                     //注意 此方法构造的List并不是Observabal的 通知UI时已经套了线程调用 可以安全的在后台运行
                     panelData.UpdateItems(task.Result.Item2);
                     this.PathChanged?.Invoke(path);
                     //同时开始加载文件图标
-                    this.itemsIconLoadHandler?.Invoke();
+                    this.itemsIconLoadHandler?.Invoke(path);
                 }
                 else
                 {
                     //失败时不更新path，保持原来的path不变
-                    this.PathChanged?.Invoke(this.path!);
+                    this.PathChanged?.Invoke(this.fallBackPath!);
                 }
             });
         }
 
         //此方法用于在目录已经打开后再加载文件图标，避免阻塞UI线程
-        private void LoadFileImageAsync()
+        private void LoadFileImageAsync(string path)
         {
             //此锁保证:
             //如果老任务未结束 则tokenSource不为Null 且可结束
@@ -204,7 +199,7 @@ namespace StarExplorer.Controls
                                     //此处不应该有除了TaskCanceledException之外的异常，如果有，说明逻辑有问题
                                     //以上检查取消不一定能捕获到 如触发枚举修改异常等 这里再检查一次tokenSource是否被取消
                                     //否则输出异常
-                        this.imageLoadExceptionHandler?.Invoke(ex, this.path!);
+                        this.imageLoadExceptionHandler?.Invoke(ex, path);
                     }
                     finally
                     {

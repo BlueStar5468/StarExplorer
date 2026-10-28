@@ -39,6 +39,7 @@ namespace StarExplorer.Views
         public int AdressBoxHeight { get => adressBoxHeight; set { if (adressBoxHeight != value) { adressBoxHeight = value; OnPropertyChanged(nameof(AdressBoxHeight)); } } }
         public int AdressBoxCornerRadius { get => adressBoxCornerRadius; set { if (adressBoxCornerRadius != value) { adressBoxCornerRadius = value; OnPropertyChanged(nameof(AdressBoxCornerRadius)); } } }
         public string Path { get => path; }
+        public ref string PathRef => ref path; //提供对path的引用
         public Color ThemeColor { get => themeColor; set { if (themeColor != value) { themeColor = value; OnPropertyChanged(nameof(ThemeColor)); } } }
         
 

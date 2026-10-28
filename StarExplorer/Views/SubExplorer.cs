@@ -164,6 +164,8 @@ namespace StarExplorer.Views
             addressBoxLoseFocusedHandler = (s, e) =>
             {
                 this.AddressBoxEvent?.Invoke(new AddressBoxEventArgs((s as TextBox)?.Text ?? "/", isAddressEntered));
+                //重置状态
+                this.isAddressEntered = false;
             };
         }
 

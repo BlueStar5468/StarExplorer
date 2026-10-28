@@ -156,6 +156,8 @@ namespace StarExplorer.Logic
                         }
                         else if (currentPanelType == CurrentPanelType.DevicePanel)
                         {
+                            //TODO:添加路径检测 路径不存在则不执行 防止创建空的ItemPanel 
+
                             //需要销毁DevicePanel并创建新的ItemsPanel
                             view.ClearDisplayContent();
                             this._DisposeDevicePanel();
@@ -212,7 +214,8 @@ namespace StarExplorer.Logic
         private ItemsPanelController CreateItemPanel(String path)
         {
             //在path路径下创建ItemsPanel
-            ItemsPanelController itemsPanelController = new ItemsPanelController(settings, coreData);
+            //TODO:此传入初始路径必须要是一个有效的路径，后续需要添加路径检测逻辑 否则会导致地址栏回退为空白
+            ItemsPanelController itemsPanelController = new ItemsPanelController(settings, coreData, path);
             itemsPanelController.SetPathAndRefresh(path);
             //事件绑定
             itemsPanelController.PathChanged += OnPathChanged;
