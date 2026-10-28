@@ -113,7 +113,7 @@ namespace StarExplorer.WindowsBackend
         }
 
         //获取文件图标
-        public byte[] GetFileOrFolderIcon(string path, bool isLarge, bool isOverlay)
+        public RawIconData GetFileOrFolderIcon(string path, bool isLarge, bool isOverlay)
         {
             //获取图标句柄
             var fileTargetInfo = new WindowsInvoker.SHFILEINFO();
@@ -227,7 +227,7 @@ namespace StarExplorer.WindowsBackend
                                 pixelData[k + 2] = temp;
                             }
                             //最终数据处理完成
-                            return pixelData;
+                            return new RawIconData(pixelData, width, height);
                         }
                         finally
                         {

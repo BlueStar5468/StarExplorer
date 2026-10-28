@@ -54,16 +54,7 @@ namespace StarExplorer.Controls
             Image icon = new Image();
             icon.Stretch = Avalonia.Media.Stretch.Fill;
             icon.Bind(Image.MarginProperty, new Binding(nameof(dataContext.FileItemInternalMargin)) { Source = dataContext, Converter = new ThicknessConverter() });
-            if (itemDataContext.ItemToDisplay.Type == ItemType.Folder)
-                icon.Bind(Image.SourceProperty, new Binding(nameof(dataContext.FolderIcon)) { Source = dataContext });
-            else if (itemDataContext.ItemToDisplay.Type == ItemType.Folder_Link)
-                icon.Bind(Image.SourceProperty, new Binding(nameof(dataContext.FolderLinkIcon)) { Source = dataContext });
-            else if (itemDataContext.ItemToDisplay.Type == ItemType.File)
-                icon.Bind(Image.SourceProperty, new Binding(nameof(dataContext.FileIcon)) { Source = dataContext });
-            else if (itemDataContext.ItemToDisplay.Type == ItemType.SymbolicLink)
-                icon.Bind(Image.SourceProperty, new Binding(nameof(dataContext.FileIcon)) { Source = dataContext });
-            else
-                icon.Bind(Image.SourceProperty, new Binding(nameof(dataContext.FileIcon)) { Source = dataContext });
+            icon.Bind(Image.SourceProperty, new Binding(nameof(itemDataContext.Icon)) { Source = itemDataContext });
 
             Grid.SetColumn(icon, 0);
             grid.Children.Add(icon);

@@ -24,7 +24,7 @@ namespace StarExplorer.Abstractions
         }
 
         //仅限Windows--通过Explorer获取文件图标
-        public byte[] GetFileIconWindows(string fullPath, bool isLarge = false, bool isOverlay = false)
+        public RawIconData GetFileIconWindows(string fullPath, bool isLarge = false, bool isOverlay = false)
         {
             if (OperatingSystem.IsWindows())
             {

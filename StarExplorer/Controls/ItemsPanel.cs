@@ -22,11 +22,13 @@ namespace StarExplorer.Controls
         ItemsPanelData data;
         //所有的Item实例 注：不再维护所有Control引用 容易造成与Context不同步
         //List<FolderItemsControl> folderItemsControls = new List<FolderItemsControl>();
+        ItemsControl itemsControl;
         
         //事件
         public event Action<string>? PathChanged; //当用户双击文件夹时触发,传递目标路径
         public event Action? PanelDisposed; //当ItemsPanel被销毁时触发 
-        
+        //不要使用LayoutUpdated事件来更新图标 会触发死循环
+
         //本地委托
         PropertyChangedEventHandler? ItemsChangedHandler;
 
@@ -78,7 +80,7 @@ namespace StarExplorer.Controls
                 VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
             };
 
-            var ItemsControl = new ItemsControl
+            itemsControl = new ItemsControl
             {
                 ItemsPanel = new FuncTemplate<Panel?>(() =>
                 {
@@ -115,23 +117,17 @@ namespace StarExplorer.Controls
                 }, false)
                 //此处false不复用是必要的,防止切换目录后,ItemsControl的ItemTemplate复用旧的FolderItemsControl,导致显示错误 
             };
-            ItemsControl.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(dataContext.ItemsDataContexts)) { Source = dataContext });
-            //绑定items变化
-            this.ItemsChangedHandler = (s, e) =>
-            {
-                if (e.PropertyName == nameof(dataContext.ItemsDataContexts))
-                {
-                    ItemsControl.ItemsSource = null;
-                    ItemsControl.ItemsSource = dataContext.ItemsDataContexts;
-                }
-            };
-            dataContext.PropertyChanged += this.ItemsChangedHandler;
-
-            scrollViewer.Content = ItemsControl;
+            itemsControl.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(dataContext.ItemsDataContexts)) { Source = dataContext });
+            
+            scrollViewer.Content = itemsControl;
 
             dock.Children.Add(scrollViewer);
 
             root.Children.Add(dock);
+
+            //事件绑定
+            InitHandler(dataContext);
+            dataContext.PropertyChanged += this.ItemsChangedHandler;
         }
 
         public Panel GetInstance()
@@ -140,6 +136,18 @@ namespace StarExplorer.Controls
         }
 
         //封装方法
+        private void InitHandler(ItemsPanelData dataContext)
+        {
+            this.ItemsChangedHandler = (s, e) =>
+            {
+                if (e.PropertyName == nameof(dataContext.ItemsDataContexts))
+                {
+                    itemsControl.ItemsSource = null;
+                    itemsControl.ItemsSource = dataContext.ItemsDataContexts;
+                }
+            };
+        }
+
         private IItemsDataContext? GetItemDataContextByID(int id)
         {
             foreach (var dataContext in data.ItemsDataContexts)

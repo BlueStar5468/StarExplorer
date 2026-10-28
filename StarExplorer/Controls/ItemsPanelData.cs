@@ -34,6 +34,11 @@ namespace StarExplorer.Controls
         IImage? folderLinkIcon;
         IImage? fileIcon;
 
+        //对于某些后缀的图标 可能是不唯一的 此字典存储需要重复读取的扩展名
+        Dictionary<string, string> uniqueFileImages = null!;
+        //动态运行时的图标缓存
+        Dictionary<string, IImage> fileImages = null!;
+
         //下面List用于绑定UI
         ObservableCollection<IItemsDataContext> itemsDataContexts = new ObservableCollection<IItemsDataContext>(); //组合item后的DataContext列表
 
@@ -77,6 +82,11 @@ namespace StarExplorer.Controls
             this.folderIcon = settings.FolderIcon;
             this.folderLinkIcon = settings.FolderLinkIcon;
             this.fileIcon = settings.FileIcon;
+
+            //TODO: 初始化uniqueFileImages字典 目前没有使用
+
+            //初始化图标缓存字典
+            this.fileImages = new Dictionary<string, IImage>();
         }
         private void BindSettings(ISettings settings)
         {
@@ -135,7 +145,7 @@ namespace StarExplorer.Controls
             var newContext = new ObservableCollection<IItemsDataContext>();
             foreach (Item item in newItems)
             {
-                ItemDataContext itemDataContext = new ItemDataContext(idManager.GetID(), item);
+                ItemDataContext itemDataContext = new ItemDataContext(idManager.GetID(), item, GetDefaultIcons(item));
                 newContext.Add(itemDataContext);
             }
             //ItemsControl绑定的是属性而不是这个字段 因此可以替换引用来触发UI刷新 而不是Clear+AddRange
@@ -143,10 +153,30 @@ namespace StarExplorer.Controls
             this.OnPropertyChanged(nameof(ItemsDataContexts));
         }
 
+        private IImage GetDefaultIcons(Item item)
+        {
+            //获取默认图标
+            if (item.Type == ItemType.Folder)
+            {
+                return FolderIcon ?? throw new InvalidOperationException("FolderIcon is not set.");
+            }
+            else if (item.Type == ItemType.Folder_Link)
+            {
+                return FolderLinkIcon ?? throw new InvalidOperationException("FolderLinkIcon is not set.");
+            }
+            else
+            {   //在此处添加更多的默认图标类型处理逻辑
+                return FileIcon ?? throw new InvalidOperationException("FileIcon is not set.");
+            }
+        }
+
         public void Dispose()
         {
             //释放本地委托
             settings.PropertyChanged -= settingsChangedHandler;
+            //销毁图标缓存
+            this.fileImages.Clear();
+            this.fileImages = null!;
         }
     }
 
@@ -154,17 +184,22 @@ namespace StarExplorer.Controls
     {
         int id;
         Item itemToDisplay;
+        IImage icon;
         bool isSelected = false;
+        bool isIconLoaded = false;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public int ID { get { return id; } }
         public Item ItemToDisplay { get { return itemToDisplay; } }
+        public bool IsIconLoaded { get { return isIconLoaded; } set { isIconLoaded = value; OnPropertyChanged(nameof(IsIconLoaded)); } }
         public bool IsSelected { get { return isSelected; } set { isSelected = value; OnPropertyChanged(nameof(IsSelected)); } }
-        public ItemDataContext(int id, Item itemToDisplay)
+        public IImage Icon { get { return icon; } set { icon = value; OnPropertyChanged(nameof(Icon)); } }
+        public ItemDataContext(int id, Item itemToDisplay, IImage icon)
         {
             this.id = id;
             this.itemToDisplay = itemToDisplay;
+            this.icon = icon;
         }
 
         private void OnPropertyChanged(string propertyName)
@@ -181,6 +216,8 @@ namespace StarExplorer.Controls
         public int ID { get; }
         public Item ItemToDisplay { get; }
         public bool IsSelected { get; set; }
+        public bool IsIconLoaded { get; set; }
+        public IImage Icon { get; set; }
         public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

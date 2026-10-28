@@ -46,6 +46,13 @@ namespace StarExplorer.Logic
             });
         }
 
+        public RawIconData GetFoldersAndFilesIconByPath(string path)
+        {
+            if (!isLegalPath(path))
+                throw new ArgumentException("路径不合法");
+            return _FAL.GetItemsIcon(path);
+        }
+
         //封装方法
         public void RefreshDevices()
         {
@@ -80,5 +87,6 @@ namespace StarExplorer.Logic
         public List<LogicDevices> Devices { get; set; }
         public List<Item> GetFoldersAndFilesByPath(string path);
         public Task<List<Item>> GetFoldersAndFilesByPathAsync(string path);
+        public RawIconData GetFoldersAndFilesIconByPath(string path);
     }
 }

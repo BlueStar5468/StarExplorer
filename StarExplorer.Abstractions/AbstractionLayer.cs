@@ -90,7 +90,7 @@ namespace StarExplorer.Abstractions
 
         //目前仅限windows
         //已测试
-        public byte[] GetItemsIcon(string path, bool isLarge = true, bool isOverlay = true)
+        public RawIconData GetItemsIcon(string path, bool isLarge = true, bool isOverlay = true)
         {
             if (platform == Platform.Windows)
             {
@@ -107,5 +107,6 @@ namespace StarExplorer.Abstractions
     {
         List<LogicDevices> GetDevices();
         List<Item> GetFoldersAndFilesByPath(string path);
+        RawIconData GetItemsIcon(string path, bool isLarge = true, bool isOverlay = true);
     }
 }

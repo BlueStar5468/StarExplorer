@@ -156,4 +156,10 @@ namespace StarExplorer.Shared
         }
     }
 
+    //原始图标数据记录类型
+    public sealed record RawIconData(
+        byte[] Pixels,
+        int Width,
+        int Height);
+
 }
