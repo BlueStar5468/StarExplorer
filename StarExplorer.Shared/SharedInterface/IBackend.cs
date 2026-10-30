@@ -14,6 +14,8 @@ namespace StarExplorer.Shared.SharedInterface
         public void GetFoldersByPath(string path, out List<Item> items);
         public void GetFoldersAndFilesByPath(string path, out List<Item> items);
         public RawIconData GetFileOrFolderIcon(string path, bool isLarge, bool isOverlay);
+        public bool CheckExists(string path);
+        public bool CanAccessPath(string path);
 
     }
 }

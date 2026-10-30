@@ -53,6 +53,16 @@ namespace StarExplorer.Logic
             return _FAL.GetItemsIcon(path);
         }
 
+        public bool CheckExists(string path)
+        {
+            return _FAL.CheckExists(path);
+        }
+
+        public bool CanAccess(string path)
+        {
+            return _FAL.CanAccessPath(path);
+        }
+
         //封装方法
         public void RefreshDevices()
         {
@@ -88,5 +98,7 @@ namespace StarExplorer.Logic
         public List<Item> GetFoldersAndFilesByPath(string path);
         public Task<List<Item>> GetFoldersAndFilesByPathAsync(string path);
         public RawIconData GetFoldersAndFilesIconByPath(string path);
+        bool CheckExists(string path);
+        bool CanAccess(string path);
     }
 }

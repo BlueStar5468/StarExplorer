@@ -192,15 +192,26 @@ namespace StarExplorer.Logic
                         }
                         else if (currentPanelType == CurrentPanelType.DevicePanel)
                         {
-                            //TODO:添加路径检测 路径不存在则不执行 防止创建空的ItemPanel 
+                            //路径检测 路径不存在则不执行 防止创建空的ItemPanel 
+                            if (coreData.CheckExists(args.TargetPath) &&
+                                coreData.CanAccess(args.TargetPath))
+                            {
+                                //需要销毁DevicePanel并创建新的ItemsPanel
+                                view.ClearDisplayContent();
+                                this._DisposeDevicePanel();
 
-                            //需要销毁DevicePanel并创建新的ItemsPanel
-                            view.ClearDisplayContent();
-                            this._DisposeDevicePanel();
-
-                            currentItemPanelCtl = CreateItemPanel(args.TargetPath);
-                            view.SetMainDisplayContent(currentItemPanelCtl.GetInstance());
-                            this.currentPanelType = CurrentPanelType.ItemsPanel;
+                                currentItemPanelCtl = CreateItemPanel(args.TargetPath);
+                                view.SetMainDisplayContent(currentItemPanelCtl.GetInstance());
+                                this.currentPanelType = CurrentPanelType.ItemsPanel;
+                            }
+                            else
+                            {
+                                //路径不存在或无法访问，恢复地址栏内容
+                                data.SetPath(data.Path);
+                                //由于没有调用ItemPanel的方法 这里要自己把错误信息显示出来
+                                toastCanvasController.ShowToast("Error", $"Path does not exist or cannot be accessed: {args.TargetPath}");
+                                return;
+                            }
                         }
                     }
                 }

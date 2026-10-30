@@ -101,6 +101,36 @@ namespace StarExplorer.Abstractions
                 throw new NotSupportedException("不支持的平台");
             }
         }
+
+        public bool CheckExists(string path)
+        {
+            if (platform == Platform.Windows)
+            {
+                if (backend != null)
+                    return backend.CheckExists(path);
+                else
+                    throw new InvalidOperationException("指定后端为空");
+            }
+            else
+            {
+                throw new NotSupportedException("不支持的平台");
+            }
+        }
+
+        public bool CanAccessPath(string path)
+        {
+            if (platform == Platform.Windows)
+            {
+                if (backend != null)
+                    return backend.CanAccessPath(path);
+                else
+                    throw new InvalidOperationException("指定后端为空");
+            }
+            else
+            {
+                throw new NotSupportedException("不支持的平台");
+            }
+        }
     }
 
     public interface IAbstractionLayer : IModule
@@ -108,5 +138,7 @@ namespace StarExplorer.Abstractions
         List<LogicDevices> GetDevices();
         List<Item> GetFoldersAndFilesByPath(string path);
         RawIconData GetItemsIcon(string path, bool isLarge = true, bool isOverlay = true);
+        public bool CheckExists(string path);
+        public bool CanAccessPath(string path);
     }
 }

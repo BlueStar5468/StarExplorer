@@ -256,5 +256,70 @@ namespace StarExplorer.WindowsBackend
             }
         
         }
+
+        public bool CheckExists(string path)
+        {
+            return Directory.Exists(path) || File.Exists(path);
+        }
+
+        //此方法仅检查可读取 不保证可写入
+        public bool CanAccessPath(string path)
+        {
+            try
+            {
+                if (Directory.Exists(path))
+                {
+                    //尝试获取目录的访问权限
+                    try
+                    {
+                        Directory.GetFiles(path);
+                        return true;
+                    }
+                    catch (Exception)
+                    {
+                        return false; //其他异常，认为无法访问
+                    }
+                }
+                else if (File.Exists(path))
+                {
+                    try
+                    {
+                        using (FileStream fs = File.Open(
+                            path,
+                            FileMode.Open,
+                            FileAccess.Read,
+                            FileShare.ReadWrite))
+                        {
+                            return true;
+                        }
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        return false;
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        return false;
+                    }
+                    catch (IOException)
+                    {
+                        // 可能是共享冲突、磁盘错误等，不一定是权限问题
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false; //路径不存在
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return false; //没有访问权限
+            }
+            catch (Exception)
+            {
+                return false; //其他异常，认为无法访问
+            }
+        }
     }
 }
