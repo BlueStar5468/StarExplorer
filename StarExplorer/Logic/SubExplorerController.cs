@@ -3,6 +3,7 @@ using StarExplorer.Controls;
 using StarExplorer.Views;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace StarExplorer.Logic
 {
@@ -24,7 +25,7 @@ namespace StarExplorer.Logic
         //事件
         public Action? DisposeDevicePanel;
         public Action? DisposeItemsPanel;
-        //内部处理委托
+        //本地委托
         Action<AddressBoxEventArgs>? addressBoxEventHandler;
 
         public SubExplorerController(ICoreData coreData, ISettings settings, IToastCanvasController toastCanvasController)
@@ -122,8 +123,9 @@ namespace StarExplorer.Logic
 
         private void InitHandler()
         {
-            this.addressBoxEventHandler = (args) =>
+            this.addressBoxEventHandler = async (args) =>
             {
+                //不要throw异常 此async void无法处理异常
                 if (args.InputORDispose == true)
                 {
                     //处理地址栏文本变更事件
@@ -139,6 +141,8 @@ namespace StarExplorer.Logic
 
                             view.SetMainDisplayContent(CreateDevicePanel());
                             this.currentPanelType = CurrentPanelType.DevicePanel;
+
+                            data.SetPath(newPath); //更新地址栏内容
                         }
                         else if (currentPanelType == CurrentPanelType.DevicePanel)
                         {
@@ -152,7 +156,39 @@ namespace StarExplorer.Logic
                         if (currentPanelType == CurrentPanelType.ItemsPanel)
                         {
                             //此方法会尝试以此路径刷新ItemsPanel，如果路径无法切换会自动调用事件恢复地址栏内容
-                            currentItemPanelCtl?.SetPathAndRefresh(newPath);
+                            //这里理论上不可能发生这个异常 如果发生请检查CurrentPanelType的状态是否正确维护
+                            if (currentItemPanelCtl == null) throw new Exception("currentItemPanelCtl is null");
+
+                            bool result = await currentItemPanelCtl.SetPathAndRefreshAsync(newPath);
+                            if (result)
+                            {
+                                //说明路径切换成功，更新地址栏内容
+                                data.SetPath(newPath);
+                            }
+                            else
+                            {
+                                //如果路径切换失败，恢复地址栏内容
+                                //此时data.Path还未改变，所以会恢复到之前的路径
+                                data.SetPath(data.Path);
+                                //直接retturn即可 在此情况下重复fallback路径会导致加载负载
+                                return;
+
+                                //fallback参考实现
+                                //bool result2 = await currentItemPanelCtl.SetPathAndRefreshAsync(data.Path);
+                                //if (result2)
+                                //{
+                                //    //fallback成功，更新地址栏内容
+                                //    data.SetPath(data.Path);
+                                //    return;
+                                //}
+                                //else
+                                //{
+                                //    toastCanvasController.ShowToast("Error", $"Failed to Fallback to:{data.Path}.");
+                                //    //如果恢复路径也失败了，说明ItemsPanel已经处于异常状态，直接返回到起始面板
+                                //    Debug.WriteLine($"Failed to recover path after failed path change.");
+                                //    OnHomeButtonClicked();
+                                //}
+                            }
                         }
                         else if (currentPanelType == CurrentPanelType.DevicePanel)
                         {
@@ -173,7 +209,7 @@ namespace StarExplorer.Logic
                     //表明用户是点击其他地方导致地址栏失焦的 需要回退地址
                     string currentPath = data.Path;
                     data.SetPath(currentPath); //通过data的SetPath方法来触发地址栏内容回退
-                    //注：采用MVVM模式方式的UI不需要直接控制的方法 触发UI同步即可
+                                               //注：采用MVVM模式方式的UI不需要直接控制的方法 触发UI同步即可
                 }
             };
         }
@@ -214,9 +250,8 @@ namespace StarExplorer.Logic
         private ItemsPanelController CreateItemPanel(String path)
         {
             //在path路径下创建ItemsPanel
-            //TODO:此传入初始路径必须要是一个有效的路径，后续需要添加路径检测逻辑 否则会导致地址栏回退为空白
+            //TODO:此传入初始路径必须要是一个有效的路径，否则会导致内容为空白
             ItemsPanelController itemsPanelController = new ItemsPanelController(settings, coreData, path);
-            itemsPanelController.SetPathAndRefresh(path);
             //事件绑定
             itemsPanelController.PathChanged += OnPathChanged;
             itemsPanelController.MessageGenerated += OnMessageGenerated;

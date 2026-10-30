@@ -8,6 +8,8 @@ using System.Threading;
 using System.IO;
 using Avalonia.Media;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using Tmds.DBus.Protocol;
 
 namespace StarExplorer.Controls
 {
@@ -23,7 +25,6 @@ namespace StarExplorer.Controls
         public Action<string>? PathChanged;
         public Action<string, string>? MessageGenerated;
         //数据
-        string? fallBackPath;
         CancellationTokenSource tokenSource = null!; //需要时再创建
         object tokenSourceLock = new object(); //锁对象 用于保护tokenSource的访问
         //本地委托
@@ -31,16 +32,17 @@ namespace StarExplorer.Controls
         Action<Exception, string>? imageLoadExceptionHandler;
         Action<string>? itemsIconLoadHandler;
 
-        public ItemsPanelController(ISettings settings, ICoreData coreData,string path)
+        public ItemsPanelController(ISettings settings, ICoreData coreData, string path)
         {
             this.settings = settings;
             this.coreData = coreData;
-            //初始化path引用
-            this.fallBackPath = path;
             
             CreateWindow();
             InitHandler();  //注意顺序!
             BindEvents();
+
+            //设置初始路径
+            this.SetPathAndRefresh(path);
         }
 
         //封装方法
@@ -105,7 +107,7 @@ namespace StarExplorer.Controls
 
         //异步刷新方法
         //此方法可作为fire-and-forget在本项目中的标准示例使用
-        //待进行的重构:此方法位置不对 应该在SubExplorerController中处理 这里导致了对SubExplorer的path的引用需求
+        //此方法仅限内部使用
         public void SetPathAndRefresh(string path)
         {
             Debug.WriteLine($"Setting path to: {path}");
@@ -115,36 +117,57 @@ namespace StarExplorer.Controls
                 this.tokenSource?.Cancel();
             }
 
-            Task.Run(() =>
+            Task.Run(async () =>
             {
+                bool success = false;
                 try
                 {
-                    return (success:true ,coreData.GetFoldersAndFilesByPath(path));
+                    success = await SetPathAndRefreshAsync(path);
                 }
                 catch (Exception ex)
                 {
                     fileExceptionHandler?.Invoke(ex, path);
-                    return (success:false, null!);
+                    success = false;
                 }
-            }
-            ).ContinueWith((task) =>
-            {
-                if (task.Result.success)
+                if (success)
                 {
-                    //必须执行成功后才能更新path，否则可能会导致path与显示的内容不一致
-                    this.fallBackPath = path;
-                    //注意 此方法构造的List并不是Observabal的 通知UI时已经套了线程调用 可以安全的在后台运行
-                    panelData.UpdateItems(task.Result.Item2);
+                    //通知外部路径已改变
                     this.PathChanged?.Invoke(path);
-                    //同时开始加载文件图标
-                    this.itemsIconLoadHandler?.Invoke(path);
                 }
                 else
                 {
-                    //失败时不更新path，保持原来的path不变
-                    this.PathChanged?.Invoke(this.fallBackPath!);
+                    //此处失败还没有替换panelData的Items
+                    return;
                 }
             });
+        }
+
+        public async Task<bool> SetPathAndRefreshAsync(string path)
+        {
+            Debug.WriteLine($"Setting path to: {path}");
+            //修改位置后 需要取消图标加载任务
+            lock (tokenSourceLock)
+            {
+                this.tokenSource?.Cancel();
+            }
+
+            bool result = await Task.Run(() =>
+            {
+                List<Item> newItems;
+                try
+                {
+                    newItems = coreData.GetFoldersAndFilesByPath(path);
+                }
+                catch (Exception ex)
+                {
+                    fileExceptionHandler?.Invoke(ex, path);
+                    return false;  //方便外层调用者得知执行失败
+                }
+                panelData.UpdateItems(newItems);
+                this.itemsIconLoadHandler?.Invoke(path);
+                return true;
+            });
+            return result;
         }
 
         //此方法用于在目录已经打开后再加载文件图标，避免阻塞UI线程
