@@ -28,6 +28,10 @@ namespace StarExplorer.Logic
         //本地委托
         Action<AddressBoxEventArgs>? addressBoxEventHandler;
         Action? upButtonHandler;
+        Action? homeButtonHandler;
+        Action<string,string>? messageGeneratedHandler;
+        Action<string,bool>? deviceOpenedHandler;
+        Action<string>? pathChangedHandler;
 
         public SubExplorerController(ICoreData coreData, ISettings settings, IToastCanvasController toastCanvasController)
         {
@@ -42,71 +46,6 @@ namespace StarExplorer.Logic
             CreateStartPanel();
         }
 
-        //事件处理方法
-        private void OpenDevice(string devicePath, bool isReady)
-        {
-            //处理设备打开事件
-            Debug.WriteLine($"Device opened: {devicePath}");
-            //光驱等设备处理
-            if (!isReady)
-            { 
-                toastCanvasController.ShowToast($"设备未就绪: {devicePath}", $"请将媒体插入设备 {devicePath}");
-                return;
-            }
-            toastCanvasController.ShowToast($"设备已打开: {devicePath}", $"设备已打开: {devicePath}");
-
-            data.SetPath(devicePath);
-            //创建ItemsPanel
-            currentItemPanelCtl = CreateItemPanel(data.Path);
-            currentPanelType = CurrentPanelType.ItemsPanel;
-            view.ClearDisplayContent();
-            this._DisposeDevicePanel();
-            view.SetMainDisplayContent(currentItemPanelCtl.GetInstance());
-        }
-
-        private void OnHomeButtonClicked()
-        {
-            //处理Home按钮点击事件
-            Debug.WriteLine("Home button clicked");
-            GC.Collect();
-
-            if (currentPanelType == defaltPanelType)
-                return; //如果当前面板类型已经是默认面板类型，则不需要返回到起始面板
-            //返回到起始面板
-            if (currentPanelType == CurrentPanelType.ItemsPanel)
-            {
-                view.ClearDisplayContent();
-                this._DisposeItemsPanel();  //触发DisposeItemsPanel事件，解除ItemsPanel的事件绑定
-                CreateStartPanel();
-            }
-            else if (currentPanelType == CurrentPanelType.DevicePanel)
-            {
-                view.ClearDisplayContent();
-                this._DisposeDevicePanel();  //触发DisposeDevicePanel事件，解除DevicePanel的事件绑定
-                CreateStartPanel();
-            }
-        }
-
-        private void OnMessageGenerated(string title, string message)
-        {
-            //处理消息生成事件
-            toastCanvasController.ShowToast(title, message);
-        }
-
-        //来自ItemsPanel的路径变更事件
-        private void OnPathChanged(string newPath)
-        {
-            //处理路径变更事件
-            Debug.WriteLine($"Path changed to: {newPath}");
-            data.SetPath(newPath);
-            //刷新ItemsPanel由对应的ItemsPanelController处理
-        }
-
-        //封装方法
-        public Panel GetInstance()
-        {
-            return root;
-        }
         private void CreatWindow()
         {
             //创建窗口逻辑
@@ -118,7 +57,7 @@ namespace StarExplorer.Logic
 
         private void BindEvent()
         {
-            view.HomeButtonCliked += OnHomeButtonClicked;
+            view.HomeButtonCliked += homeButtonHandler;
             view.AddressBoxEvent += addressBoxEventHandler;
             view.UpButtonClicked += upButtonHandler;
         }
@@ -264,8 +203,66 @@ namespace StarExplorer.Logic
                     return;
                 }
             };
+
+            this.homeButtonHandler = () =>
+            {
+                //处理Home按钮点击事件
+                Debug.WriteLine("Home button clicked");
+                GC.Collect();
+
+                if (currentPanelType == defaltPanelType)
+                    return; //如果当前面板类型已经是默认面板类型，则不需要返回到起始面板
+                            //返回到起始面板
+                if (currentPanelType == CurrentPanelType.ItemsPanel)
+                {
+                    view.ClearDisplayContent();
+                    this._DisposeItemsPanel();  //触发DisposeItemsPanel事件，解除ItemsPanel的事件绑定
+                    CreateStartPanel();
+                }
+                else if (currentPanelType == CurrentPanelType.DevicePanel)
+                {
+                    view.ClearDisplayContent();
+                    this._DisposeDevicePanel();  //触发DisposeDevicePanel事件，解除DevicePanel的事件绑定
+                    CreateStartPanel();
+                }
+            };
+
+            this.messageGeneratedHandler = (title, message) =>
+            {
+                //处理消息生成事件
+                toastCanvasController.ShowToast(title, message);
+            };
+
+            this.deviceOpenedHandler = (devicePath, isReady) =>
+            {
+                //处理设备打开事件
+                Debug.WriteLine($"Device opened: {devicePath}");
+                //光驱等设备处理
+                if (!isReady)
+                {
+                    toastCanvasController.ShowToast($"设备未就绪: {devicePath}", $"请将媒体插入设备 {devicePath}");
+                    return;
+                }
+                toastCanvasController.ShowToast($"设备已打开: {devicePath}", $"设备已打开: {devicePath}");
+
+                data.SetPath(devicePath);
+                //创建ItemsPanel
+                currentItemPanelCtl = CreateItemPanel(data.Path);
+                currentPanelType = CurrentPanelType.ItemsPanel;
+                view.ClearDisplayContent();
+                this._DisposeDevicePanel();
+                view.SetMainDisplayContent(currentItemPanelCtl.GetInstance());
+            };
+
+            this.pathChangedHandler = (newPath) =>
+            {
+                //处理路径变更事件
+                Debug.WriteLine($"Path changed to: {newPath}");
+                data.SetPath(newPath);
+            };
         }
 
+        //封装方法
         private void CreateStartPanel()
         {
             if (settings.StartLocation == StartLocation.Devices)
@@ -287,10 +284,10 @@ namespace StarExplorer.Logic
         {
             DevicePanelController devicePanelController = new DevicePanelController(settings, coreData);
             //事件绑定
-            devicePanelController.DeviceOpened += OpenDevice;
+            devicePanelController.DeviceOpened += deviceOpenedHandler;
             //Dispose事件绑定
             this.DisposeDevicePanel += () => {
-                devicePanelController.DeviceOpened -= OpenDevice;
+                devicePanelController.DeviceOpened -= deviceOpenedHandler;
                 devicePanelController.Dispose();
                 //所有devicePanel已经Dispose，解除绑定
                 this.DisposeDevicePanel = null;
@@ -305,13 +302,13 @@ namespace StarExplorer.Logic
             //TODO:此传入初始路径必须要是一个有效的路径，否则会导致内容为空白
             ItemsPanelController itemsPanelController = new ItemsPanelController(settings, coreData, path);
             //事件绑定
-            itemsPanelController.PathChanged += OnPathChanged;
-            itemsPanelController.MessageGenerated += OnMessageGenerated;
+            itemsPanelController.PathChanged += pathChangedHandler;
+            itemsPanelController.MessageGenerated += messageGeneratedHandler;
             //Dispose事件绑定
             this.DisposeItemsPanel += () =>
             {
-                itemsPanelController.PathChanged -= OnPathChanged;
-                itemsPanelController.MessageGenerated -= OnMessageGenerated;
+                itemsPanelController.PathChanged -= pathChangedHandler;
+                itemsPanelController.MessageGenerated -= messageGeneratedHandler;
                 itemsPanelController.Dispose();
             };
 
@@ -337,13 +334,18 @@ namespace StarExplorer.Logic
             this.DisposeDevicePanel = null;
         }
 
+        public Panel GetInstance()
+        {
+            return root;
+        }
+
         public void Dispose()
         {
             //清理子资源
             DisposeAll();
             view.Dispose();
 
-            view.HomeButtonCliked -= OnHomeButtonClicked;
+            view.HomeButtonCliked -= homeButtonHandler;
             view.AddressBoxEvent -= addressBoxEventHandler;
             view.UpButtonClicked -= upButtonHandler;
 
@@ -351,6 +353,13 @@ namespace StarExplorer.Logic
             //清理本地事件
             this.DisposeItemsPanel = null;
             this.DisposeDevicePanel = null;
+            //清理本地委托
+            this.addressBoxEventHandler = null;
+            this.deviceOpenedHandler = null;
+            this.homeButtonHandler = null;
+            this.messageGeneratedHandler = null;
+            this.pathChangedHandler = null;
+            this.upButtonHandler = null;
         }
     }
 
