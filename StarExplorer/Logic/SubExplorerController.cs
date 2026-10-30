@@ -27,6 +27,7 @@ namespace StarExplorer.Logic
         public Action? DisposeItemsPanel;
         //本地委托
         Action<AddressBoxEventArgs>? addressBoxEventHandler;
+        Action? upButtonHandler;
 
         public SubExplorerController(ICoreData coreData, ISettings settings, IToastCanvasController toastCanvasController)
         {
@@ -119,6 +120,7 @@ namespace StarExplorer.Logic
         {
             view.HomeButtonCliked += OnHomeButtonClicked;
             view.AddressBoxEvent += addressBoxEventHandler;
+            view.UpButtonClicked += upButtonHandler;
         }
 
         private void InitHandler()
@@ -223,6 +225,45 @@ namespace StarExplorer.Logic
                                                //注：采用MVVM模式方式的UI不需要直接控制的方法 触发UI同步即可
                 }
             };
+
+            this.upButtonHandler = async () =>
+            {
+                //处理上级目录按钮点击事件
+                Debug.WriteLine("Up button clicked");
+                if (currentPanelType == CurrentPanelType.ItemsPanel)
+                {
+                    if (currentItemPanelCtl == null) throw new Exception("currentItemPanelCtl is null");
+                    string parentPath = coreData.GetUpperPath(data.Path);
+                    if (parentPath == null)
+                    {
+                        //已经是根目录 无法再上级
+                        toastCanvasController.ShowToast("Info", "Already at root directory.");
+                        return;
+                    }
+                    else
+                    {
+                        //尝试切换到上级目录
+                        bool result = await currentItemPanelCtl.SetPathAndRefreshAsync(parentPath);
+
+                        if (result)
+                        {
+                            data.SetPath(parentPath);
+                        }
+                        else
+                        {
+                            //如果路径切换失败，恢复地址栏内容
+                            data.SetPath(data.Path);
+                            toastCanvasController.ShowToast("Error", $"Failed to change to upper path: {parentPath}");
+                            return;
+                        }
+                    }
+                }
+                else if (currentPanelType == CurrentPanelType.DevicePanel)
+                {
+                    //设备页面没有上级目录按钮的功能
+                    return;
+                }
+            };
         }
 
         private void CreateStartPanel()
@@ -304,6 +345,7 @@ namespace StarExplorer.Logic
 
             view.HomeButtonCliked -= OnHomeButtonClicked;
             view.AddressBoxEvent -= addressBoxEventHandler;
+            view.UpButtonClicked -= upButtonHandler;
 
             data.Dispose();
             //清理本地事件

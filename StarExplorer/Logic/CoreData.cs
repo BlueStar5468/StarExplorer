@@ -63,6 +63,13 @@ namespace StarExplorer.Logic
             return _FAL.CanAccessPath(path);
         }
 
+        public string GetUpperPath(string path)
+        {
+            if (!isLegalPath(path))
+                throw new ArgumentException("路径不合法");
+            return _FAL.GetUpperPath(path);
+        }
+
         //封装方法
         public void RefreshDevices()
         {
@@ -100,5 +107,6 @@ namespace StarExplorer.Logic
         public RawIconData GetFoldersAndFilesIconByPath(string path);
         bool CheckExists(string path);
         bool CanAccess(string path);
+        string GetUpperPath(string path);
     }
 }

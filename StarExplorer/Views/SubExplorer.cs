@@ -28,6 +28,7 @@ namespace StarExplorer.Views
 
         //事件
         public event Action? HomeButtonCliked;
+        public event Action? UpButtonClicked;
         public event Action<AddressBoxEventArgs>? AddressBoxEvent;
         //本地委托
         EventHandler<Avalonia.Input.KeyEventArgs>? addressBoxKeyPressedHandler;
@@ -57,16 +58,24 @@ namespace StarExplorer.Views
 
                 //用于在地址栏左右侧放置按钮的Grid
                 Grid adressBorderGrid = new Grid();
-                ColumnDefinition adressBorderGridColumn0 = new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) };
-                ColumnDefinition adressBorderGridColumn1 = new ColumnDefinition();
-                adressBorderGrid.ColumnDefinitions.Add(adressBorderGridColumn0);
-                adressBorderGrid.ColumnDefinitions.Add(adressBorderGridColumn1);
+                ColumnDefinition homeButtonColumn = new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) };
+                ColumnDefinition upButtonColumn = new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) };
+                ColumnDefinition addressBoxColumn = new ColumnDefinition();
+                adressBorderGrid.ColumnDefinitions.Add(homeButtonColumn);
+                adressBorderGrid.ColumnDefinitions.Add(upButtonColumn);
+                adressBorderGrid.ColumnDefinitions.Add(addressBoxColumn);
 
                 Button homeButton = new Button();
                 homeButton.Content = "H";
                 homeButton.Bind(Button.WidthProperty, new Binding(nameof(dataContext.AdressBoxHeight)) { Source = dataContext });
                 homeButton.Bind(Button.HeightProperty, new Binding(nameof(dataContext.AdressBoxHeight)) { Source = dataContext });
                 homeButton.Margin = new Avalonia.Thickness(10, 0, 0, 0);
+
+                Button upButton = new Button();
+                upButton.Content = "↑";
+                upButton.Bind(Button.WidthProperty, new Binding(nameof(dataContext.AdressBoxHeight)) { Source = dataContext });
+                upButton.Bind(Button.HeightProperty, new Binding(nameof(dataContext.AdressBoxHeight)) { Source = dataContext });
+                upButton.Margin = new Avalonia.Thickness(10, 0, 0, 0);
 
                 addressBox = new TextBox();
                 addressBox.Bind(TextBox.CornerRadiusProperty, new Binding(nameof(dataContext.AdressBoxCornerRadius)) { Source = dataContext, Converter = new CornerRadiusConverter() });
@@ -78,9 +87,11 @@ namespace StarExplorer.Views
                 addressBox.KeyDown += addressBoxKeyPressedHandler;
                 addressBox.LostFocus += addressBoxLoseFocusedHandler;
 
-                Grid.SetColumn(addressBox, 1);
                 Grid.SetColumn(homeButton, 0);
+                Grid.SetColumn(upButton, 1);
+                Grid.SetColumn(addressBox, 2);
                 adressBorderGrid.Children.Add(homeButton);
+                adressBorderGrid.Children.Add(upButton);
                 adressBorderGrid.Children.Add(addressBox);
 
                 adressBorder.Child = adressBorderGrid;
@@ -91,6 +102,11 @@ namespace StarExplorer.Views
                 homeButton.Click += (s, e) =>
                 {
                     this.HomeButtonCliked?.Invoke();
+                };
+
+                upButton.Click += (s, e) =>
+                {
+                    this.UpButtonClicked?.Invoke();
                 };
             }
 

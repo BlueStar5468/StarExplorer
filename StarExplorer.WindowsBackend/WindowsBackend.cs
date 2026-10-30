@@ -321,5 +321,17 @@ namespace StarExplorer.WindowsBackend
                 return false; //其他异常，认为无法访问
             }
         }
+
+        public string GetUpperPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new ArgumentException("路径不能为空", nameof(path));
+            }
+            // 获取上级目录
+            string? upperPath = Path.GetDirectoryName(path);
+            // 如果上级目录为 null，说明已经是根目录，返回null
+            return upperPath ?? null!;
+        }
     }
 }

@@ -16,6 +16,7 @@ namespace StarExplorer.Shared.SharedInterface
         public RawIconData GetFileOrFolderIcon(string path, bool isLarge, bool isOverlay);
         public bool CheckExists(string path);
         public bool CanAccessPath(string path);
+        public string GetUpperPath(string path);
 
     }
 }
